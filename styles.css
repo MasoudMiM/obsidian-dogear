@@ -1,0 +1,1255 @@
+/* Dogear — styles.
+ *
+ * Every colour, size and font comes from an Obsidian CSS variable so themes
+ * restyle this plugin for free and dark mode is correct by construction.
+ * There are no hardcoded colours and no !important declarations.
+ *
+ * Layout uses Obsidian's spacing scale (--size-4-*) so density matches the
+ * rest of the app rather than looking like a foreign widget.
+ */
+
+/* ---------------------------------------------------------------- covers -- */
+
+.dogear-cover {
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: var(--radius-s);
+  background-color: var(--background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+}
+
+.dogear-cover__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dogear-cover--thumb {
+  width: 32px;
+  height: 48px;
+}
+
+.dogear-cover--medium {
+  width: 88px;
+  height: 132px;
+  /* No documented shadow foundation variable exists, so a border is used
+     rather than a hardcoded rgba() shadow that would clash with dark themes. */
+  border: 1px solid var(--background-modifier-border);
+}
+
+.dogear-cover.is-placeholder {
+  border: 1px solid var(--background-modifier-border);
+}
+
+/* -------------------------------------------------------- search results -- */
+
+.dogear-result {
+  display: flex;
+  gap: var(--size-4-3);
+  align-items: center;
+}
+
+.dogear-result__text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dogear-result__title {
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dogear-result__meta {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dogear-result__detail {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.dogear-result__detail.is-muted,
+.is-muted {
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------ empty state -- */
+
+.dogear-empty {
+  padding: var(--size-4-6) var(--size-4-4);
+  text-align: center;
+}
+
+.dogear-empty__title {
+  color: var(--text-normal);
+  font-weight: var(--font-medium);
+  margin-bottom: var(--size-4-1);
+}
+
+.dogear-empty__body {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: var(--line-height-tight);
+}
+
+/* -------------------------------------------------------------- book modal -- */
+
+.dogear-book-modal .dogear-book__header {
+  display: flex;
+  gap: var(--size-4-4);
+  align-items: flex-start;
+  margin-bottom: var(--size-4-4);
+}
+
+.dogear-book__meta {
+  min-width: 0;
+}
+
+.dogear-book__authors {
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+}
+
+.dogear-book__facts,
+.dogear-book__reads {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin-top: var(--size-2-2);
+}
+
+.dogear-modal__intro {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: var(--line-height-tight);
+  margin-top: 0;
+}
+
+/* --------------------------------------------------------------- progress -- */
+
+.dogear-progress {
+  margin-bottom: var(--size-4-3);
+}
+
+.dogear-progress__track {
+  height: 8px;
+  border-radius: var(--radius-s);
+  background-color: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.dogear-progress__fill {
+  height: 100%;
+  width: var(--dogear-progress, 0%);
+  background-color: var(--interactive-accent);
+  transition: width 200ms ease-out;
+}
+
+.dogear-progress__label {
+  margin-top: var(--size-2-2);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.dogear-progress__pace {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------ log controls -- */
+
+.dogear-log {
+  padding: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background-color: var(--background-secondary);
+}
+
+.dogear-log__row {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  flex-wrap: wrap;
+}
+
+.dogear-log__row + .dogear-log__row {
+  margin-top: var(--size-4-3);
+}
+
+.dogear-log__label {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  flex: 0 0 auto;
+}
+
+.dogear-log__value {
+  flex: 1 1 8ch;
+  min-width: 8ch;
+}
+
+.dogear-log__unit {
+  flex: 0 0 auto;
+}
+
+.dogear-log__hint,
+.dogear-log__feedback {
+  margin-top: var(--size-4-2);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  line-height: var(--line-height-tight);
+}
+
+/* --------------------------------------------------------------- messages -- */
+
+.dogear-message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--size-2-2);
+  line-height: var(--line-height-tight);
+}
+
+/* Tone is carried by an icon as well as colour, never colour alone. */
+.dogear-message.is-error {
+  color: var(--text-error);
+}
+
+.dogear-message.is-success {
+  color: var(--text-success);
+}
+
+.dogear-message__icon {
+  --icon-size: var(--icon-s);
+  flex: 0 0 auto;
+  display: flex;
+}
+
+/* -------------------------------------------------------------- segmented -- */
+
+.dogear-segmented {
+  display: flex;
+  gap: var(--size-2-1);
+  flex-wrap: wrap;
+}
+
+.dogear-segmented__option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  padding: var(--size-2-2) var(--size-4-2);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background-color: var(--interactive-normal);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.dogear-segmented__option:hover {
+  background-color: var(--interactive-hover);
+  color: var(--text-normal);
+}
+
+.dogear-segmented__option.is-active {
+  background-color: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.dogear-segmented__label {
+  white-space: nowrap;
+}
+
+.dogear-segmented__icon {
+  --icon-size: var(--icon-s);
+  display: flex;
+}
+
+/* ----------------------------------------------------------------- rating -- */
+
+.dogear-rating {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-3);
+}
+
+.dogear-rating__input {
+  flex: 0 0 auto;
+  width: 140px;
+}
+
+.dogear-rating__stars {
+  position: relative;
+  display: inline-flex;
+  color: var(--text-faint);
+}
+
+.dogear-rating__layer {
+  display: flex;
+  gap: var(--size-2-1);
+  width: max-content;
+}
+
+/* The accent-coloured row sits on top, clipped to the fill width. */
+.dogear-rating__clip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow: hidden;
+  width: var(--dogear-rating-fill, 0%);
+  color: var(--text-accent);
+  pointer-events: none;
+}
+
+.dogear-rating__star {
+  --icon-size: var(--icon-m);
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.dogear-rating__clear.is-hidden {
+  visibility: hidden;
+}
+
+.dogear-slider-value {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  min-width: 4ch;
+  text-align: right;
+  margin-right: var(--size-4-2);
+}
+
+/* ---------------------------------------------------------------- history -- */
+
+.dogear-history {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dogear-history__item + .dogear-history__item {
+  margin-top: var(--size-4-3);
+  padding-top: var(--size-4-3);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.dogear-history__title {
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-medium);
+}
+
+.dogear-history__dates {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.dogear-history__entries {
+  list-style: none;
+  padding: 0;
+  margin: var(--size-2-2) 0 0;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+}
+
+/* --------------------------------------------------------------- settings -- */
+
+.dogear-settings__preview {
+  margin-top: var(--size-2-2);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.dogear-settings__preview-name {
+  font-family: var(--font-monospace-theme);
+  color: var(--text-normal);
+}
+
+.dogear-settings__preview-warning {
+  color: var(--text-warning);
+}
+
+.dogear-settings__credit {
+  margin-top: var(--size-4-6);
+  padding-top: var(--size-4-3);
+  border-top: 1px solid var(--background-modifier-border);
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+}
+
+/* ------------------------------------------------------------ icon button -- */
+
+.dogear-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--size-2-2);
+  border-radius: var(--radius-s);
+  background-color: transparent;
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.dogear-icon-button:hover {
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* ------------------------------------------------------------ focus rings -- */
+
+/* Keyboard focus must always be visible, including on custom controls. */
+.dogear-segmented__option:focus-visible,
+.dogear-icon-button:focus-visible,
+.dogear-rating__input:focus-visible,
+.dogear-log__value:focus-visible,
+.dogear-log__unit:focus-visible {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------- reduced motion -- */
+
+@media (prefers-reduced-motion: reduce) {
+  .dogear-progress__fill {
+    transition: none;
+  }
+}
+
+/* ----------------------------------------------------------------- mobile -- */
+
+/* Obsidian adds .is-phone on narrow devices. Stack rather than squeeze. */
+.is-phone .dogear-log__row--entry {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.is-phone .dogear-log__submit {
+  width: 100%;
+}
+
+.is-phone .dogear-book__header {
+  gap: var(--size-4-3);
+}
+
+.is-phone .dogear-cover--medium {
+  width: 64px;
+  height: 96px;
+}
+
+/* ------------------------------------------------- container hooks -- */
+
+/* Scoping hooks so themes and snippets can target Dogear's surfaces
+   without relying on element structure. */
+
+.dogear-search-modal .suggestion-item {
+  padding-top: var(--size-2-2);
+  padding-bottom: var(--size-2-2);
+}
+
+.dogear-settings .setting-item-description {
+  line-height: var(--line-height-tight);
+}
+
+/* --------------------------------------------------------------- sources -- */
+
+.dogear-settings__providers {
+  margin-bottom: var(--size-4-4);
+  padding-left: var(--size-4-3);
+  border-left: 2px solid var(--background-modifier-border);
+}
+
+/* ------------------------------------------------------- manual fallback -- */
+
+/* The "enter it yourself" row. Visually distinct from real results so it
+   reads as an action rather than a book that happens to be called that. */
+.dogear-result--manual {
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: var(--size-4-2);
+}
+
+.dogear-result--manual .dogear-result__title {
+  color: var(--text-accent);
+}
+
+.dogear-manual-modal .setting-item {
+  padding-top: var(--size-4-2);
+  padding-bottom: var(--size-4-2);
+}
+
+/* Which catalogue a result came from. Quiet, but always present. */
+.dogear-result__source {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  padding: 1px var(--size-2-2);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------- in-note panel -- */
+
+/* The control panel rendered in place of the `dogear` code block. Framed so it
+   reads as an interface element rather than note content. */
+.dogear-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-3);
+  padding: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background-color: var(--background-primary-alt);
+}
+
+.dogear-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+}
+
+.dogear-panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-4-3);
+  flex-wrap: wrap;
+  padding-top: var(--size-4-2);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.dogear-panel__rating {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.dogear-panel__details {
+  background-color: transparent;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.dogear-panel__details:hover {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+}
+
+.dogear-panel__details:focus-visible {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: 2px;
+}
+
+.dogear-panel__error {
+  color: var(--text-error);
+  font-size: var(--font-ui-smaller);
+}
+
+.is-phone .dogear-panel__footer {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* ------------------------------------------------- state-aware panel bits -- */
+
+.dogear-panel__note {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.dogear-panel__reason {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  font-style: italic;
+}
+
+.dogear-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  align-items: center;
+}
+
+/* Push "History and details" away from the primary actions so it is never
+   clicked by accident when reaching for "Mark finished". */
+.dogear-panel__actions .dogear-panel__details {
+  margin-left: auto;
+}
+
+.dogear-log__note {
+  width: 100%;
+}
+
+.is-phone .dogear-panel__actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.is-phone .dogear-panel__actions .dogear-panel__details {
+  margin-left: 0;
+}
+
+/* How a mixed-format read splits between media. */
+.dogear-progress__mix {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+}
+
+/* -------------------------------------------------------- goodreads import -- */
+
+.dogear-import-modal .modal-content {
+  max-height: 70vh;
+}
+
+.dogear-import__help,
+.dogear-import__status {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  margin-bottom: var(--size-4-2);
+}
+
+.dogear-import__file,
+.dogear-import__filter {
+  width: 100%;
+  margin-bottom: var(--size-4-2);
+}
+
+.dogear-import__count {
+  font-weight: var(--font-semibold);
+}
+
+.dogear-import__warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+  padding: var(--size-4-2);
+  margin-bottom: var(--size-4-3);
+  border-left: 3px solid var(--text-warning);
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-s);
+}
+
+.dogear-import__warning {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-normal);
+}
+
+.dogear-import__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-2-2);
+  margin-bottom: var(--size-4-2);
+}
+
+/* The list is the part people actually scrutinise, so give it room and let it
+   scroll independently of the summary above it. */
+.dogear-import__list {
+  max-height: 40vh;
+  overflow-y: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+}
+
+.dogear-import__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--size-4-2);
+  padding: var(--size-2-2) var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.dogear-import__row:last-child {
+  border-bottom: none;
+}
+
+.dogear-import__row.is-duplicate .dogear-import__title {
+  color: var(--text-muted);
+}
+
+.dogear-import__rowtext {
+  min-width: 0;
+}
+
+.dogear-import__title {
+  font-size: var(--font-ui-small);
+  overflow-wrap: anywhere;
+}
+
+.dogear-import__meta,
+.dogear-import__empty,
+.dogear-import__selected {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.dogear-import__empty {
+  padding: var(--size-4-3);
+  text-align: center;
+}
+
+.dogear-import__footer {
+  padding-top: var(--size-4-2);
+}
+
+/* ========================================================== library view == */
+
+.dogear-library {
+  padding: var(--size-4-4);
+  overflow-y: auto;
+}
+
+/* --- controls --- */
+
+.dogear-library__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-3);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--size-4-4);
+  padding-bottom: var(--size-4-3);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.dogear-library__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-2-2);
+}
+
+.dogear-library__tab {
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  box-shadow: none;
+  padding: var(--size-2-2) var(--size-4-2);
+  font-size: var(--font-ui-small);
+}
+
+.dogear-library__tab:hover {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+}
+
+.dogear-library__tab.is-active {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-active-hover);
+  border-color: var(--background-modifier-border);
+  font-weight: var(--font-semibold);
+}
+
+.dogear-library__tab:focus-visible {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: 2px;
+}
+
+.dogear-library__tools {
+  display: flex;
+  gap: var(--size-2-2);
+  align-items: center;
+}
+
+.dogear-library__search {
+  min-width: 220px;
+}
+
+/* --- the grid ---
+   auto-fill rather than a fixed column count, so the same view works in a
+   narrow split and a maximised window without a media query per breakpoint. */
+
+.dogear-library__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--size-4-4) var(--size-4-3);
+  align-items: start;
+}
+
+/* --- a book --- */
+
+.dogear-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-3);
+  cursor: pointer;
+  text-align: left;
+}
+
+.dogear-card:focus-visible {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-s);
+}
+
+.dogear-card__art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.dogear-card:hover .dogear-card__art {
+  border-color: var(--background-modifier-border-hover);
+}
+
+.dogear-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* A book with no artwork should look deliberate, not broken. */
+.dogear-card__placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--size-2-2);
+  height: 100%;
+  padding: var(--size-4-2);
+  background-color: var(--background-secondary-alt);
+}
+
+.dogear-card__placeholdertitle {
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--text-normal);
+  overflow-wrap: anywhere;
+}
+
+.dogear-card__placeholderauthor {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.dogear-card__progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background-color: var(--background-modifier-border);
+}
+
+.dogear-card__progressfill {
+  height: 100%;
+  width: var(--dogear-progress, 0%);
+  background-color: var(--interactive-accent);
+}
+
+.dogear-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dogear-card__title {
+  font-size: var(--font-ui-small);
+  line-height: var(--line-height-tight);
+  color: var(--text-normal);
+  /* Two lines, then ellipsis: keeps the grid rows even without truncating
+     so hard that titles become unrecognisable. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dogear-card__author,
+.dogear-card__rating {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dogear-card__rating {
+  color: var(--text-accent);
+}
+
+/* --- empty states --- */
+
+.dogear-library__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-8) var(--size-4-4);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.dogear-library__emptytitle {
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+}
+
+/* --- mobile --- */
+
+.is-phone .dogear-library {
+  padding: var(--size-4-2);
+}
+
+.is-phone .dogear-library__grid {
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--size-4-3) var(--size-4-2);
+}
+
+.is-phone .dogear-library__bar {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.is-phone .dogear-library__search {
+  min-width: 0;
+  flex: 1;
+}
+
+/* A card is a div with role=button, so it needs the affordances a real
+   button gets for free. */
+.dogear-card {
+  user-select: none;
+}
+
+.dogear-card:focus-visible {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-s);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dogear-card__art {
+    transition: border-color 120ms ease;
+  }
+}
+
+/* Long titles on a coverless card should not run to the bottom edge. */
+.dogear-card__placeholdertitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dogear-card__rating {
+  letter-spacing: 0.02em;
+}
+
+/* -------------------------------------------------------- cover picker -- */
+
+.dogear-cover-modal__input {
+  width: 100%;
+}
+
+.dogear-cover-modal__preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 180px;
+  margin: var(--size-4-3) 0;
+  padding: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background-color: var(--background-secondary);
+}
+
+.dogear-cover-modal__img {
+  max-height: 220px;
+  max-width: 100%;
+  border-radius: var(--radius-s);
+}
+
+.dogear-cover-modal__none {
+  color: var(--text-faint);
+  font-size: var(--font-ui-small);
+}
+
+.dogear-modal__hint {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+  margin-bottom: var(--size-4-3);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+/* ===================================================== reading statistics == */
+
+.dogear-stats {
+  padding: var(--size-4-6) var(--size-4-4);
+  overflow-y: auto;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* --- period selector --- */
+
+.dogear-stats__years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-2-2);
+  margin-bottom: var(--size-4-6);
+}
+
+.dogear-stats__year {
+  background-color: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  padding: var(--size-2-2) var(--size-4-2);
+}
+
+.dogear-stats__year:hover {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+}
+
+.dogear-stats__year.is-active {
+  color: var(--text-on-accent);
+  background-color: var(--interactive-accent);
+  font-weight: var(--font-semibold);
+}
+
+.dogear-stats__year:focus-visible {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: 2px;
+}
+
+/* --- headline figures ---
+   The numbers people arrive for, given room to breathe rather than packed
+   into a dense table. */
+
+.dogear-stats__headline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--size-4-4);
+  margin-bottom: var(--size-4-8);
+}
+
+.dogear-stats__figure {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dogear-stats__value {
+  font-size: 2.2em;
+  line-height: 1.1;
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+.dogear-stats__label {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.dogear-stats__note {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+
+/* --- panels --- */
+
+.dogear-stats__panel {
+  margin-bottom: var(--size-4-8);
+}
+
+.dogear-stats__title {
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--size-4-3) 0;
+}
+
+.dogear-stats__foot {
+  margin-top: var(--size-4-3);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* --- horizontal bars --- */
+
+.dogear-stats__bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-3);
+}
+
+.dogear-stats__bar {
+  display: grid;
+  grid-template-columns: 110px 1fr 40px;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.dogear-stats__barlabel {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dogear-stats__bartrack {
+  height: 12px;
+  border-radius: var(--radius-s);
+  background-color: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.dogear-stats__barfill {
+  height: 100%;
+  width: var(--dogear-bar, 0%);
+  border-radius: var(--radius-s);
+  background-color: var(--interactive-accent);
+}
+
+.dogear-stats__barfill.is-empty {
+  background-color: transparent;
+}
+
+.dogear-stats__barvalue {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- vertical columns --- */
+
+.dogear-stats__columns {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--size-2-3);
+  min-height: 160px;
+}
+
+.dogear-stats__column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-2-1);
+  min-width: 0;
+}
+
+.dogear-stats__colvalue {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dogear-stats__colvalue.is-empty {
+  color: var(--text-faint);
+}
+
+.dogear-stats__coltrack {
+  width: 100%;
+  height: 120px;
+  display: flex;
+  align-items: flex-end;
+  background-color: var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  overflow: hidden;
+}
+
+.dogear-stats__colfill {
+  width: 100%;
+  height: var(--dogear-bar, 0%);
+  background-color: var(--interactive-accent);
+  border-radius: var(--radius-s) var(--radius-s) 0 0;
+}
+
+.dogear-stats__collabel {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* --- shelves --- */
+
+.dogear-stats__shelves {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--size-4-3);
+}
+
+.dogear-stats__shelf {
+  padding: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background-color: var(--background-secondary);
+}
+
+.dogear-stats__shelfcount {
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.dogear-stats__shelflabel {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.dogear-stats__empty {
+  padding: var(--size-4-8);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* --- mobile --- */
+
+.is-phone .dogear-stats {
+  padding: var(--size-4-3) var(--size-4-2);
+}
+
+.is-phone .dogear-stats__value {
+  font-size: 1.7em;
+}
+
+.is-phone .dogear-stats__bar {
+  grid-template-columns: 80px 1fr 32px;
+}
+
+.is-phone .dogear-stats__columns {
+  min-height: 130px;
+}
+
+.is-phone .dogear-stats__coltrack {
+  height: 90px;
+}

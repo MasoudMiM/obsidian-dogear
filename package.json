@@ -1,0 +1,33 @@
+{
+  "name": "dogear",
+  "version": "1.0.0",
+  "description": "A reading tracker that keeps your library in plain Markdown.",
+  "main": "main.js",
+  "scripts": {
+    "build": "node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs",
+    "test": "node test/run.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.24.0",
+    "obsidian": "latest",
+    "typescript": "^5.7.0"
+  },
+  "author": "Masoud Masoumi",
+  "keywords": [
+    "obsidian-plugin",
+    "reading",
+    "books",
+    "goodreads",
+    "tracker"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MasoudMiM/obsidian-dogear.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MasoudMiM/obsidian-dogear/issues"
+  }
+}

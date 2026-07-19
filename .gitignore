@@ -1,0 +1,17 @@
+# Build output — produced at release time, not committed.
+main.js
+*.js.map
+
+# Dependencies
+node_modules/
+
+# Test bundles
+test/.suite.bundle.mjs
+test/*.test.mjs
+test/*.cjs
+
+# Editor and OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
