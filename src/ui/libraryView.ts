@@ -20,7 +20,6 @@ import {
     STATUS_LABELS,
     currentFraction,
     type Book,
-    type ReadingStatus,
 } from '../model';
 import {
     SORT_LABELS,
@@ -103,7 +102,7 @@ export class LibraryView extends ItemView {
 
         const active = document.activeElement;
         const wasSearching = active instanceof HTMLInputElement && root.contains(active);
-        const caret = wasSearching ? (active as HTMLInputElement).selectionStart : null;
+        const caret = wasSearching ? active.selectionStart : null;
         const scroll = root.scrollTop;
 
         root.empty();
@@ -382,10 +381,10 @@ export async function openLibrary(app: App): Promise<void> {
     const { workspace } = app;
     const existing = workspace.getLeavesOfType(VIEW_TYPE_LIBRARY);
     if (existing.length > 0) {
-        workspace.revealLeaf(existing[0]);
+        await workspace.revealLeaf(existing[0]);
         return;
     }
     const leaf = workspace.getLeaf('tab');
     await leaf.setViewState({ type: VIEW_TYPE_LIBRARY, active: true });
-    workspace.revealLeaf(leaf);
+    await workspace.revealLeaf(leaf);
 }

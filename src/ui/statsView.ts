@@ -11,7 +11,7 @@
 // and hand-built bars inherit the reader's theme for free, which no charting
 // library manages convincingly in both light and dark.
 
-import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { ItemView, WorkspaceLeaf, type App } from 'obsidian';
 import { STATUS_LABELS, type Book } from '../model';
 import {
     computeStats,
@@ -141,9 +141,9 @@ export class StatsView extends ItemView {
                 const next = (index + step + options.length) % options.length;
                 this.year = options[next][0];
                 this.render();
-                (this.containerEl.children[1] as HTMLElement)
-                    .querySelectorAll<HTMLElement>('.dogear-stats__year')
-                    [next]?.focus();
+                const tabs = (this.containerEl.children[1] as HTMLElement)
+                    .querySelectorAll<HTMLElement>('.dogear-stats__year');
+                tabs[next]?.focus();
             });
         });
     }
@@ -321,20 +321,14 @@ export class StatsView extends ItemView {
 }
 
 /** Open the statistics tab, reusing one if it is already open. */
-export async function openStats(app: {
-    workspace: {
-        getLeavesOfType: (t: string) => WorkspaceLeaf[];
-        revealLeaf: (l: WorkspaceLeaf) => void;
-        getLeaf: (t: 'tab') => WorkspaceLeaf;
-    };
-}): Promise<void> {
+export async function openStats(app: App): Promise<void> {
     const { workspace } = app;
     const existing = workspace.getLeavesOfType(VIEW_TYPE_STATS);
     if (existing.length > 0) {
-        workspace.revealLeaf(existing[0]);
+        await workspace.revealLeaf(existing[0]);
         return;
     }
     const leaf = workspace.getLeaf('tab');
     await leaf.setViewState({ type: VIEW_TYPE_STATS, active: true });
-    workspace.revealLeaf(leaf);
+    await workspace.revealLeaf(leaf);
 }

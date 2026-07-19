@@ -648,7 +648,11 @@ export async function runVaultTests(h: Harness): Promise<void> {
             resolve: async () => ({ title: 'Found', authors: [], tags: [], source: 'ok' }),
         };
 
-        const chain = new ProviderChain(() => [hanging, working], 50);
+        const timers = {
+            setTimeout: (fn: () => void, ms: number) => Number(setTimeout(fn, ms)),
+            clearTimeout: (id: number) => clearTimeout(id),
+        };
+        const chain = new ProviderChain(() => [hanging, working], 50, timers);
         const result = await chain.search('x');
         eq(result.usedProvider, 'ok', 'the chain moves past the stalled source');
         ok(
@@ -656,7 +660,7 @@ export async function runVaultTests(h: Harness): Promise<void> {
             'and says plainly that it timed out',
         );
 
-        const onlyHang = new ProviderChain(() => [hanging], 50);
+        const onlyHang = new ProviderChain(() => [hanging], 50, timers);
         let err: Error | null = null;
         try {
             await onlyHang.search('x');

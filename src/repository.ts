@@ -23,7 +23,7 @@ import {
     replaceSection,
     DEFAULT_LOG_HEADING,
 } from './note';
-import { buildNotePath, renderFilenameTemplate, uniquePath } from './paths';
+import { renderFilenameTemplate, uniquePath } from './paths';
 import type { DogearSettings } from './settings';
 import type { YamlMap } from './yaml';
 

@@ -1,19 +1,22 @@
 {
   "name": "dogear",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A reading tracker that keeps your library in plain Markdown.",
   "main": "main.js",
   "scripts": {
     "build": "node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",
-    "test": "node test/run.mjs"
+    "test": "node test/run.mjs",
+    "lint": "eslint src --ext .ts"
   },
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.10.0",
     "esbuild": "^0.24.0",
+    "eslint": "^9.39.5",
     "obsidian": "latest",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.64.0"
   },
   "author": "Masoud Masoumi",
   "keywords": [
@@ -29,5 +32,10 @@
   },
   "bugs": {
     "url": "https://github.com/MasoudMiM/obsidian-dogear/issues"
+  },
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint-plugin-obsidianmd": "^0.4.1"
   }
 }

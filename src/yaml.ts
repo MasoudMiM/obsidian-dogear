@@ -56,7 +56,7 @@ function needsQuoting(value: string): boolean {
     if (/^(true|false|null|yes|no|on|off|~)$/i.test(value)) return true;
     if (/^-?\d+(\.\d+)?$/.test(value)) return true;
     if (/^[\s]|[\s]$/.test(value)) return true;
-    if (/[:#\[\]{},&*!|>'"%@`\n\r]/.test(value)) return true;
+    if (/[:#[\]{},&*!|>'"%@`\n\r]/.test(value)) return true;
     if (/^[-?]/.test(value)) return true;
     return false;
 }

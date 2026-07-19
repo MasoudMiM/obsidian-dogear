@@ -17,7 +17,7 @@
 const ILLEGAL = /[*"\\/<>:|?#^[\]]/g;
 
 /** Control characters, which are legal in some filesystems and awful in all. */
-// eslint-disable-next-line no-control-regex
+// eslint-disable-next-line no-control-regex -- matching control characters is the point: they must be stripped from filenames.
 const CONTROL = /[\u0000-\u001f\u007f]/g;
 
 /**

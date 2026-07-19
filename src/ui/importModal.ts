@@ -309,7 +309,7 @@ export class GoodreadsImportModal extends Modal {
             fill.style.setProperty('--dogear-progress', `${pct}%`);
             status.setText(`${i + 1} of ${chosen.length}`);
             // Yield so the interface can actually paint between books.
-            if (i % 10 === 0) await new Promise((r) => setTimeout(r, 0));
+            if (i % 10 === 0) await new Promise((r) => window.setTimeout(r, 0));
         }
 
         this.importing = false;

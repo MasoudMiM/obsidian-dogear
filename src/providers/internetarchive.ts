@@ -70,8 +70,10 @@ export function iaCoverUrl(identifier: string): string {
 function firstOf(v: unknown): string | undefined {
     if (typeof v === 'string') return v.trim() || undefined;
     if (Array.isArray(v)) {
-        const found = v.find((x) => typeof x === 'string' && x.trim() !== '');
-        return typeof found === 'string' ? found.trim() : undefined;
+        const found = v.find(
+            (x): x is string => typeof x === 'string' && x.trim() !== '',
+        );
+        return found?.trim();
     }
     return undefined;
 }

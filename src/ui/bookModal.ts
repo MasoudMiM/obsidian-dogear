@@ -22,7 +22,6 @@ import {
     completedReadCount,
 } from '../model';
 import {
-    formatDuration,
     humaniseDuration,
     normalisePosition,
     parseDuration,

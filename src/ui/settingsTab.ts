@@ -17,18 +17,22 @@ import {
     type DogearSettings,
 } from '../settings';
 
-/** What the settings tab needs from the plugin. */
-export type SettingsHost = Plugin & {
-    settings: DogearSettings;
+/** What the settings tab needs. Deliberately not the whole plugin. */
+export interface SettingsHost {
+    /** The live settings object, mutated in place then saved. */
+    current: DogearSettings;
     saveSettings(): Promise<void>;
-};
+}
 
 export class DogearSettingTab extends PluginSettingTab {
     constructor(
         app: App,
+        // The base class needs the real plugin; the tab itself needs only the
+        // two members in SettingsHost, so both are passed explicitly.
+        plugin: Plugin,
         private readonly host: SettingsHost,
     ) {
-        super(app, host);
+        super(app, plugin);
     }
 
     display(): void {
@@ -36,7 +40,7 @@ export class DogearSettingTab extends PluginSettingTab {
         containerEl.empty();
         containerEl.addClass('dogear-settings');
 
-        const s = this.host.settings;
+        const s = this.host.current;
         const save = () => void this.host.saveSettings();
 
         // --- general (no heading, per the guidelines) ------------------------

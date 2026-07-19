@@ -121,7 +121,14 @@ export default class DogearPlugin extends Plugin {
         );
         this.repo = new BookRepository(this.createVaultAdapter(), () => this.settings);
 
-        this.addSettingTab(new DogearSettingTab(this.app, this));
+        // A small adapter rather than the plugin itself, so the tab depends on
+        // exactly what it needs.
+        this.addSettingTab(
+            new DogearSettingTab(this.app, this, {
+                current: this.settings,
+                saveSettings: () => this.saveSettings(),
+            }),
+        );
 
         // Ribbon icons and commands are cleaned up automatically on unload.
         this.addRibbonIcon('book-plus', 'Add a book', () => this.addBook());

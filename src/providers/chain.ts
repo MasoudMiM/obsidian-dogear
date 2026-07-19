@@ -58,8 +58,8 @@ export class ProviderChain {
             setTimeout: (fn: () => void, ms: number) => number;
             clearTimeout: (id: number) => void;
         } = {
-            setTimeout: (fn, ms) => Number(setTimeout(fn, ms)),
-            clearTimeout: (id) => clearTimeout(id),
+            setTimeout: (fn, ms) => window.setTimeout(fn, ms),
+            clearTimeout: (id) => window.clearTimeout(id),
         },
     ) {}
 

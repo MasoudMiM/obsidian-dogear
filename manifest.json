@@ -1,8 +1,8 @@
 {
   "id": "dogear",
   "name": "Dogear",
-  "version": "1.0.0",
-  "minAppVersion": "1.5.0",
+  "version": "1.0.1",
+  "minAppVersion": "1.7.2",
   "description": "Track your reading: search for books, log progress by page, percent, or listening time, and keep notes on every book in one place.",
   "author": "Masoud Masoumi",
   "authorUrl": "https://masoudmim.github.io/",

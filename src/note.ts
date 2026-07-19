@@ -31,7 +31,6 @@ import {
     type ReadingStatus,
     type BookMetrics,
     SCHEMA_VERSION,
-    FORMATS,
     FORMAT_LABELS,
     sessionFormats,
     READING_STATUSES,

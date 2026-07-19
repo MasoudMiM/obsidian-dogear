@@ -37,7 +37,7 @@ export class TokenBucket {
         this.capacity = Math.max(1, options.capacity);
         this.refillPerSecond = Math.max(0.001, options.refillPerSecond);
         this.now = options.now ?? (() => Date.now());
-        this.sleep = options.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
+        this.sleep = options.sleep ?? ((ms) => new Promise((r) => window.setTimeout(r, ms)));
         // Start full: the first search of a session should be instant.
         this.tokens = this.capacity;
         this.lastRefill = this.now();

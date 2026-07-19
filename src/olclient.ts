@@ -152,14 +152,14 @@ export class OpenLibraryClient {
         this.defaultCooldownMs = options.defaultCooldownMs ?? 60_000;
         this.bucket = options.bucket;
         this.now = options.now ?? (() => Date.now());
-        this.sleep = options.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
+        this.sleep = options.sleep ?? ((ms) => new Promise((r) => window.setTimeout(r, ms)));
     }
 
     clearCache(): void {
         this.cache.clear();
     }
 
-    private readCache(url: string): unknown | undefined {
+    private readCache(url: string): unknown {
         const hit = this.cache.get(url);
         if (!hit) return undefined;
         if (hit.expires <= this.now()) {
