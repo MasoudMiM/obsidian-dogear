@@ -1,0 +1,25 @@
+name: CI
+
+# Runs on every push and pull request, so a broken build is found here rather
+# than when a release tag is pushed and the release fails to publish.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22.x"
+
+      # `npm ci` installs strictly from the lockfile, which is what catches a
+      # dependency conflict that a forgiving local `npm install` would not.
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
