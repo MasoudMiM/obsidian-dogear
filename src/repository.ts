@@ -19,6 +19,7 @@ import { deriveStatus } from './model';
 import {
     bookToFrontmatter,
     parseBookNote,
+    type NoteIssue,
     renderReadingLog,
     replaceSection,
     DEFAULT_LOG_HEADING,
@@ -108,11 +109,13 @@ export class BookRepository {
     }
 
     /** Read a book plus any log lines that could not be understood. */
-    async loadDetailed(path: string): Promise<{ book: Book; unparsed: string[] } | null> {
+    async loadDetailed(
+        path: string,
+    ): Promise<{ book: Book; unparsed: string[]; issues: NoteIssue[] } | null> {
         if (!this.vault.exists(path)) return null;
         const content = await this.vault.read(path);
         const parsed = parseBookNote(content, this.heading);
-        return { book: parsed.book, unparsed: parsed.unparsed };
+        return { book: parsed.book, unparsed: parsed.unparsed, issues: parsed.issues };
     }
 
     /** Write frontmatter only, leaving the body untouched. */

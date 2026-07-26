@@ -33,9 +33,10 @@ import {
     SCHEMA_VERSION,
     FORMAT_LABELS,
     sessionFormats,
-    READING_STATUSES,
+    STATUS_LABELS,
     normaliseRating,
     deriveStatus,
+    parseStatus,
 } from './model';
 import { formatDuration, parseDuration, normalisePosition } from './progress';
 import { sanitiseTags } from './paths';
@@ -498,10 +499,52 @@ export function replaceSection(body: string, heading: string, content: string): 
 
 // --- book <-> note ----------------------------------------------------------
 
-function statusFrom(raw: string | undefined): ReadingStatus | undefined {
-    if (!raw) return undefined;
-    const v = raw.trim().toLowerCase();
-    return (READING_STATUSES as string[]).includes(v) ? (v as ReadingStatus) : undefined;
+/** Something in the note Dogear could not read and has worked around. */
+export interface NoteIssue {
+    kind: 'unknown-status';
+    /** Frontmatter key or log line the problem was found in. */
+    field: string;
+    /** Verbatim value as it appears in the file. */
+    found: string;
+    /** What Dogear used instead. */
+    resolvedTo: string;
+    message: string;
+}
+
+/**
+ * Work out a book's status from what the file says and what its log proves.
+ *
+ * A recognised status is trusted as written. An unrecognised one is inferred
+ * from the reading log — a completed session is far better evidence than a
+ * fallback constant — and reported, so the value is never quietly replaced.
+ */
+export function resolveStatus(
+    raw: string | undefined,
+    sessions: ReadingSession[],
+): { status: ReadingStatus; issue?: NoteIssue } {
+    const known = parseStatus(raw);
+    if (known) return { status: known };
+
+    // No status at all is normal, not a problem: a note written by hand or by
+    // another tool simply has not said yet.
+    if (!raw || raw.trim() === '') {
+        return { status: deriveStatus(sessions) };
+    }
+
+    const found = raw.trim();
+    const status = deriveStatus(sessions);
+    return {
+        status,
+        issue: {
+            kind: 'unknown-status',
+            field: 'status',
+            found,
+            resolvedTo: status,
+            message:
+                `"${found}" is not a status Dogear recognises. ` +
+                `Using "${STATUS_LABELS[status]}" based on the reading log.`,
+        },
+    };
 }
 
 /** Build the frontmatter map for a book, preserving unknown existing keys. */
@@ -566,7 +609,7 @@ export function frontmatterToBook(map: YamlMap): Omit<Book, 'sessions'> {
         tags: asList(map.tags),
         metrics: { pages: asNumber(map.pages), duration },
         rating: normaliseRating(asNumber(map.rating)),
-        status: statusFrom(asString(map.status)) ?? 'want-to-read',
+        status: parseStatus(asString(map.status)) ?? 'want-to-read',
         olWork: asString(map.olWork),
         olEdition: asString(map.olEdition),
         googleId: asString(map.googleId),
@@ -576,6 +619,8 @@ export function frontmatterToBook(map: YamlMap): Omit<Book, 'sessions'> {
 export interface ParsedBook {
     book: Book;
     unparsed: string[];
+    /** Things Dogear could not read and worked around, for reporting. */
+    issues: NoteIssue[];
     /** Frontmatter as found, so unknown keys can be written back. */
     rawFrontmatter: YamlMap;
 }
@@ -588,9 +633,14 @@ export function parseBookNote(content: string, heading = DEFAULT_LOG_HEADING): P
     const split = splitBody(body, heading);
     const { sessions, unparsed } = parseReadingLog(split.section, meta.metrics);
 
+    // Status is resolved here rather than in frontmatterToBook because it is
+    // the first point at which the reading log is available to judge against.
+    const resolved = resolveStatus(asString(map.status), sessions);
+
     return {
-        book: { ...meta, sessions },
+        book: { ...meta, sessions, status: resolved.status },
         unparsed,
+        issues: resolved.issue ? [resolved.issue] : [],
         rawFrontmatter: map,
     };
 }

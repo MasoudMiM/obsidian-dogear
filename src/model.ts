@@ -31,6 +31,66 @@ export const STATUS_LABELS: Record<ReadingStatus, string> = {
     dnf: 'Did not finish',
 };
 
+/**
+ * Spellings of a status that Dogear will accept on read.
+ *
+ * These notes are meant to be hand-edited, and people write what they are used
+ * to: Goodreads' shelf names, or plain English. Recognising them is not
+ * leniency for its own sake — the alternative was falling back to
+ * 'want-to-read' and then writing that fallback to the file, which silently
+ * demoted finished books.
+ *
+ * Deliberately excluded: anything genuinely ambiguous ('on-hold', 'paused',
+ * 'skimmed'). Guessing at those would reintroduce the same class of bug in a
+ * quieter form. An unrecognised status is now safe to leave unrecognised.
+ */
+const STATUS_ALIASES: Record<string, ReadingStatus> = {
+    // finished
+    read: 'finished',
+    'have-read': 'finished',
+    finished: 'finished',
+    complete: 'finished',
+    completed: 'finished',
+    done: 'finished',
+    // reading
+    reading: 'reading',
+    'currently-reading': 'reading',
+    'in-progress': 'reading',
+    started: 'reading',
+    // want to read
+    'want-to-read': 'want-to-read',
+    'to-read': 'want-to-read',
+    'to-be-read': 'want-to-read',
+    tbr: 'want-to-read',
+    unread: 'want-to-read',
+    wishlist: 'want-to-read',
+    // did not finish
+    dnf: 'dnf',
+    'did-not-finish': 'dnf',
+    abandoned: 'dnf',
+    'gave-up': 'dnf',
+    unfinished: 'dnf',
+};
+
+/**
+ * Resolve a stored status string, or return undefined if it cannot be read.
+ *
+ * Matching is exact against the alias table after normalising case and
+ * separators, so 'readathon' is not mistaken for 'read'.
+ */
+export function parseStatus(raw: string | undefined | null): ReadingStatus | undefined {
+    if (!raw) return undefined;
+    const key = raw
+        .trim()
+        .toLowerCase()
+        // Treat spaces and underscores as hyphens so 'Want To Read',
+        // 'want_to_read' and 'want-to-read' are one value, then collapse runs.
+        .replace(/[\s_]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    return STATUS_ALIASES[key];
+}
+
 export type Format = 'print' | 'ebook' | 'audio';
 
 export const FORMATS: Format[] = ['print', 'ebook', 'audio'];

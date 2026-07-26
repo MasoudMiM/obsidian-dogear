@@ -56,6 +56,7 @@ import { runFuzzTests } from './fuzz.test';
 import { runVaultTests } from './vault.test';
 import { runSearchTests } from './search.test';
 import { runProviderTests } from './providers.test';
+import { runStatusTests } from './status.test';
 
 // --- tiny harness -----------------------------------------------------------
 
@@ -809,6 +810,7 @@ await runVaultTests({ describe, ok, eq, close });
 await runSearchTests({ describe, ok, eq, close });
 await runProviderTests({ describe, ok, eq, close });
 await runFuzzTests({ describe, ok, eq, close });
+await runStatusTests({ describe, ok, eq, close });
 
 // --- report -----------------------------------------------------------------
 

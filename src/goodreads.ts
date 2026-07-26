@@ -20,7 +20,7 @@
 // DOM-free and dependency-free.
 
 import type { Book, Format, ReadingSession, ReadingStatus } from './model';
-import { SCHEMA_VERSION, normaliseRating } from './model';
+import { SCHEMA_VERSION, normaliseRating, parseStatus } from './model';
 import { coverUrlFromIsbn } from './openlibrary';
 
 // --- RFC 4180 CSV parsing ---------------------------------------------------
@@ -162,10 +162,15 @@ export function parseShelves(raw: string): string[] {
  * shipped DNF as a real status.
  */
 export function mapExclusiveShelf(raw: string): ReadingStatus {
+    // The shared parser owns the alias table, so the importer and hand-edited
+    // frontmatter cannot drift apart on what 'read' means.
+    const known = parseStatus(raw);
+    if (known) return known;
+
     const v = (raw || '').trim().toLowerCase();
-    if (v === 'read') return 'finished';
-    if (v === 'currently-reading') return 'reading';
-    if (v === 'to-read') return 'want-to-read';
+    // Custom shelves are free text, so a substring match is right here in a way
+    // it would not be for a frontmatter value: 'books-i-gave-up-on' is a shelf
+    // name, not a typo to be reported.
     if (/dnf|abandon|did-not-finish|unfinished|gave-up/.test(v)) return 'dnf';
     // Unknown custom exclusive shelf: safest default is the TBR pile.
     return 'want-to-read';

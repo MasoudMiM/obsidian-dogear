@@ -41,6 +41,7 @@ import { LibraryOfCongressProvider } from './providers/loc';
 import type { BookProvider, SearchHit } from './providers/types';
 import { BookRepository, type VaultLike } from './repository';
 import { DEFAULT_SETTINGS, normaliseSettings, type DogearSettings } from './settings';
+import type { NoteIssue } from './note';
 import type { YamlMap } from './yaml';
 import { BookDetailModal } from './ui/bookModal';
 import { openBookSearch } from './ui/searchModal';
@@ -562,17 +563,33 @@ export default class DogearPlugin extends Plugin {
         return folder !== '' && file.path.startsWith(`${folder}/`);
     }
 
-    private async openBookModal(file: TFile): Promise<void> {
-        const loaded = await this.repo.loadDetailed(file.path);
-        if (!loaded) {
-            new Notice("Dogear: couldn't read that note.");
-            return;
+    /**
+     * Tell the reader about anything in the note Dogear could not read.
+     *
+     * Worth surfacing rather than swallowing: an unrecognised status used to be
+     * replaced with 'want-to-read' and written back, so a typo silently
+     * demoted a finished book. It is now inferred from the reading log instead,
+     * but the reader still needs to know the file says something Dogear cannot
+     * read, or the next save will look like it changed the note on its own.
+     */
+    private reportNoteProblems(loaded: { unparsed: string[]; issues: NoteIssue[] }): void {
+        for (const issue of loaded.issues) {
+            new Notice(`Dogear: ${issue.message}`, 8000);
         }
         if (loaded.unparsed.length > 0) {
             new Notice(
                 `Dogear: ${loaded.unparsed.length} line(s) in the reading log couldn't be read and were left untouched.`,
             );
         }
+    }
+
+    private async openBookModal(file: TFile): Promise<void> {
+        const loaded = await this.repo.loadDetailed(file.path);
+        if (!loaded) {
+            new Notice("Dogear: couldn't read that note.");
+            return;
+        }
+        this.reportNoteProblems(loaded);
 
         new BookDetailModal(this.app, {
             book: loaded.book,
@@ -591,6 +608,8 @@ export default class DogearPlugin extends Plugin {
             el.createDiv({ cls: 'dogear-panel__error', text: 'Dogear could not read this note.' });
             return;
         }
+
+        this.reportNoteProblems(loaded);
 
         const file = this.app.vault.getFileByPath(normalizePath(sourcePath));
         const panel = new BookPanel(el, {
