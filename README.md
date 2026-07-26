@@ -158,7 +158,7 @@ Issues and pull requests are welcome.
 
 ```bash
 npm install
-npm test     # 1,191 tests
+npm test     # 1,267 tests
 npm run dev  # watch build
 ```
 
