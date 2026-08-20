@@ -1,6 +1,6 @@
 {
   "name": "dogear",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A reading tracker that keeps your library in plain Markdown.",
   "main": "main.js",
   "scripts": {

@@ -5,13 +5,6 @@ welcome as [issues](https://github.com/MasoudMiM/obsidian-dogear/issues).
 
 ## Next
 
-- **CSV export.** Your library is already plain Markdown you can take
-  anywhere, so this is about interoperating with other trackers rather than
-  escaping this one — but it should exist.
-- **A metadata cache that survives a restart.** Lookups are cached in memory
-  today, so restarting Obsidian makes the plugin ask for books it already
-  knew. This is the largest remaining reduction in requests to the free
-  catalogues Dogear depends on.
 - **Enrich a book added by hand.** A book entered manually should be able to
   pull in covers and page counts later, once you know its ISBN.
 - **Search on demand.** Search-as-you-type is generous to the reader and

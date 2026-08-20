@@ -23,6 +23,7 @@ import {
 } from 'obsidian';
 
 import { SCHEMA_VERSION, type Book } from './model';
+import { parseCacheFile, serializeCacheFile, type CacheSnapshot } from './cachestore';
 import { OpenLibraryClient, type HttpResponse } from './olclient';
 import { coverUrlFromIsbn } from './openlibrary';
 import {
@@ -48,6 +49,7 @@ import { openBookSearch } from './ui/searchModal';
 import { ManualBookModal } from './ui/manualModal';
 import { BookPanel, DOGEAR_BLOCK } from './ui/bookPanel';
 import { GoodreadsImportModal } from './ui/importModal';
+import { ExportCsvModal } from './ui/exportModal';
 import { CoverModal } from './ui/coverModal';
 import { LibraryView, VIEW_TYPE_LIBRARY, openLibrary as revealLibrary } from './ui/libraryView';
 import { StatsView, VIEW_TYPE_STATS, openStats as revealStats } from './ui/statsView';
@@ -82,7 +84,11 @@ export default class DogearPlugin extends Plugin {
         // minutes, so this one runs at half the stated limit, not near it.
         const locBucket = new TokenBucket({ capacity: 3, refillPerSecond: 10 / 60 });
 
-        this.client = new OpenLibraryClient(this.request, { ttlMs, bucket: olBucket });
+        this.client = new OpenLibraryClient(this.request, {
+            ttlMs,
+            bucket: olBucket,
+            onCacheWrite: () => this.scheduleCacheSave(),
+        });
         this.google = new GoogleBooksProvider(this.request, {
             ttlMs,
             apiKey: this.settings.googleApiKey || undefined,
@@ -91,17 +97,25 @@ export default class DogearPlugin extends Plugin {
             // the reader find a setting before their first search works.
             country: this.resolveCountry(),
             bucket: googleBucket,
+            onCacheWrite: () => this.scheduleCacheSave(),
         });
 
         this.archive = new InternetArchiveProvider(this.request, {
             ttlMs,
             bucket: archiveBucket,
+            onCacheWrite: () => this.scheduleCacheSave(),
         });
 
         this.loc = new LibraryOfCongressProvider(this.request, {
             ttlMs,
             bucket: locBucket,
+            onCacheWrite: () => this.scheduleCacheSave(),
         });
+
+        // A restart should not cost requests: bring back whatever the caches
+        // knew before. Missing or unreadable files simply start the caches
+        // empty, so this must never throw.
+        await this.restoreCaches();
 
         const openLibrary = new OpenLibraryProvider(
             this.client,
@@ -260,6 +274,12 @@ export default class DogearPlugin extends Plugin {
         });
 
         this.addCommand({
+            id: 'export-csv',
+            name: 'Export your library as CSV',
+            callback: () => this.exportCsv(),
+        });
+
+        this.addCommand({
             id: 'update-progress',
             name: 'Update reading progress',
             // checkCallback so the command only appears when it can actually run.
@@ -277,6 +297,14 @@ export default class DogearPlugin extends Plugin {
             window.clearTimeout(this.libraryRefreshHandle);
             this.libraryRefreshHandle = null;
         }
+        if (this.cacheSaveHandle !== null) {
+            window.clearTimeout(this.cacheSaveHandle);
+            this.cacheSaveHandle = null;
+        }
+        // Persist what the caches know before clearing them. The snapshots
+        // are captured synchronously inside flushCacheSave, so the clears
+        // below cannot race with the write.
+        void this.flushCacheSave();
         // Nothing to detach. Commands, ribbon icons, settings tabs and
         // registered events are released by Obsidian.
         this.client?.clearCache();
@@ -293,6 +321,80 @@ export default class DogearPlugin extends Plugin {
 
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);
+    }
+
+    // --- persistent metadata cache -------------------------------------------
+
+    private cacheSaveHandle: number | null = null;
+
+    /**
+     * Where the cache file lives.
+     *
+     * Inside the plugin's own folder, beside data.json: on the reader's
+     * machine, nowhere else, and it never leaves the vault. Undefined only if
+     * Obsidian has not assigned the plugin a directory, in which case caching
+     * quietly stays in memory.
+     */
+    private cacheFilePath(): string | undefined {
+        const dir = this.manifest.dir;
+        if (!dir) return undefined;
+        return normalizePath(`${dir}/dogear-cache.json`);
+    }
+
+    private cacheHolders(): Record<string, { snapshot(): CacheSnapshot; restore(s: CacheSnapshot): void }> {
+        return {
+            openlibrary: this.client,
+            googlebooks: this.google,
+            loc: this.loc,
+            internetarchive: this.archive,
+        };
+    }
+
+    private async restoreCaches(): Promise<void> {
+        const path = this.cacheFilePath();
+        if (!path) return;
+        const adapter = this.app.vault.adapter;
+        try {
+            if (!(await adapter.exists(path))) return;
+            const raw = await adapter.read(path);
+            const sections = parseCacheFile(raw, Date.now());
+            if (!sections) return;
+            const holders = this.cacheHolders();
+            for (const [id, holder] of Object.entries(holders)) {
+                const section = sections[id];
+                if (section) holder.restore(section);
+            }
+        } catch {
+            // A cache that cannot be read is simply empty. Rebuilding it is
+            // what the network layer is for.
+        }
+    }
+
+    /**
+     * Persist the caches soon, coalescing bursts of lookups into one write.
+     * Called by every provider whenever it stores a response.
+     */
+    private scheduleCacheSave(): void {
+        if (this.cacheSaveHandle !== null) window.clearTimeout(this.cacheSaveHandle);
+        this.cacheSaveHandle = window.setTimeout(() => {
+            this.cacheSaveHandle = null;
+            void this.flushCacheSave();
+        }, 2000);
+    }
+
+    private async flushCacheSave(): Promise<void> {
+        const path = this.cacheFilePath();
+        if (!path) return;
+        const providers: Record<string, CacheSnapshot> = {};
+        for (const [id, holder] of Object.entries(this.cacheHolders())) {
+            providers[id] = holder.snapshot();
+        }
+        try {
+            await this.app.vault.adapter.write(path, serializeCacheFile(providers, Date.now()));
+        } catch {
+            // Losing the cache is an inconvenience, not an error worth
+            // interrupting the reader for.
+        }
     }
 
     // --- network ------------------------------------------------------------
@@ -523,6 +625,19 @@ export default class DogearPlugin extends Plugin {
         }
     }
 
+    /** The way out: a CSV other trackers can read, written into the vault. */
+    private exportCsv(): void {
+        new ExportCsvModal(this.app, {
+            books: () => this.repo.all(),
+            write: async (path, content) => {
+                const normalised = normalizePath(path);
+                const slash = normalised.lastIndexOf('/');
+                if (slash > 0) await this.ensureFolderTree(normalised.slice(0, slash));
+                await this.app.vault.adapter.write(normalised, content);
+            },
+        }).open();
+    }
+
     /** The founding use case: getting a dead Goodreads export into the vault. */
     private importGoodreads(): void {
         new GoodreadsImportModal(this.app, {
@@ -708,7 +823,7 @@ export default class DogearPlugin extends Plugin {
         );
         void notice;
 
-        await this.ensureCoverFolder(folder);
+        await this.ensureFolderTree(folder);
         const bucket = new TokenBucket({ capacity: 3, refillPerSecond: perMinute / 60 });
 
         let saved = 0;
@@ -766,8 +881,8 @@ export default class DogearPlugin extends Plugin {
         new Notice(`${parts.join('. ')}.`);
     }
 
-    /** Create the cover folder, including any parents, if it is missing. */
-    private async ensureCoverFolder(path: string): Promise<void> {
+    /** Create a folder, including any parents, if it is missing. */
+    private async ensureFolderTree(path: string): Promise<void> {
         const normalised = normalizePath(path);
         if (normalised === '' || normalised === '/') return;
         // Create each level in turn: createFolder does not make parents.

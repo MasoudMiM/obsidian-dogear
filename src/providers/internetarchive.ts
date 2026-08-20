@@ -16,6 +16,7 @@
 //     when nothing better exists.
 
 import type { BookMetadata, BookProvider, SearchHit } from './types';
+import { pruneSnapshot, snapshotOf, type CacheSnapshot, type CachedResponse } from '../cachestore';
 import { RateLimitError, type HttpResponse, type Requester } from '../olclient';
 import { TokenBucket } from '../ratelimit';
 
@@ -146,6 +147,8 @@ export interface IaOptions {
     defaultCooldownMs?: number;
     bucket?: TokenBucket;
     now?: () => number;
+    /** Called after a response is cached, so the caller can persist it. */
+    onCacheWrite?: () => void;
 }
 
 export class InternetArchiveProvider implements BookProvider {
@@ -153,7 +156,7 @@ export class InternetArchiveProvider implements BookProvider {
     readonly label = 'Internet Archive';
     readonly attribution = 'Internet Archive';
 
-    private cache = new Map<string, { value: unknown; expires: number }>();
+    private cache = new Map<string, CachedResponse>();
     private cooldownUntil = 0;
     private readonly now: () => number;
 
@@ -201,6 +204,7 @@ export class InternetArchiveProvider implements BookProvider {
             value: res.json,
             expires: this.now() + (this.options.ttlMs ?? 24 * 60 * 60 * 1000),
         });
+        this.options.onCacheWrite?.();
         return mapIaResponse(res.json);
     }
 
@@ -210,5 +214,18 @@ export class InternetArchiveProvider implements BookProvider {
 
     clearCache(): void {
         this.cache.clear();
+    }
+
+    /** The live cache, for persisting it across restarts. */
+    snapshot(): CacheSnapshot {
+        return snapshotOf(this.cache, this.now());
+    }
+
+    /** Restore a persisted cache, dropping expired and excess entries. */
+    restore(entries: CacheSnapshot): void {
+        const max = this.options.maxEntries ?? 200;
+        for (const [url, entry] of pruneSnapshot(entries, this.now(), max)) {
+            this.cache.set(url, entry);
+        }
     }
 }

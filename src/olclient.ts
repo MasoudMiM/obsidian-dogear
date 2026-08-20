@@ -5,7 +5,8 @@
 // This module does all three:
 //
 //   - every request carries a descriptive User-Agent
-//   - responses are cached in memory with a TTL (catalogue data changes slowly)
+//   - responses are cached with a TTL (catalogue data changes slowly), and
+//     the cache can be snapshotted and restored so it survives a restart
 //   - requests are spaced by a minimum interval
 //   - 429 and 5xx responses back off exponentially rather than retrying hot
 //
@@ -13,6 +14,7 @@
 // `requestUrl` (which sidesteps CORS) while tests supply a stub. That keeps
 // this module DOM-free and fully testable.
 
+import { pruneSnapshot, snapshotOf, type CacheSnapshot, type CachedResponse } from './cachestore';
 import { TokenBucket } from './ratelimit';
 import {
     type Edition,
@@ -110,15 +112,12 @@ export interface ClientOptions {
     sleep?: (ms: number) => Promise<void>;
     /** Outgoing request limiter, to stay under the service's tolerance. */
     bucket?: TokenBucket;
-}
-
-interface CacheEntry {
-    value: unknown;
-    expires: number;
+    /** Called after a response is cached, so the caller can persist it. */
+    onCacheWrite?: () => void;
 }
 
 export class OpenLibraryClient {
-    private cache = new Map<string, CacheEntry>();
+    private cache = new Map<string, CachedResponse>();
     private lastRequestAt = 0;
     private readonly ttlMs: number;
     private readonly maxEntries: number;
@@ -127,6 +126,7 @@ export class OpenLibraryClient {
     private readonly backoffMs: number;
     private readonly defaultCooldownMs: number;
     private readonly bucket?: TokenBucket;
+    private readonly onWrite?: () => void;
     /** Epoch ms before which no request should be attempted. */
     private rateLimitedUntil = 0;
     private readonly now: () => number;
@@ -151,12 +151,28 @@ export class OpenLibraryClient {
         this.backoffMs = options.backoffMs ?? 2000;
         this.defaultCooldownMs = options.defaultCooldownMs ?? 60_000;
         this.bucket = options.bucket;
+        this.onWrite = options.onCacheWrite;
         this.now = options.now ?? (() => Date.now());
         this.sleep = options.sleep ?? ((ms) => new Promise((r) => window.setTimeout(r, ms)));
     }
 
     clearCache(): void {
         this.cache.clear();
+    }
+
+    /** The live cache, for persisting it across restarts. */
+    snapshot(): CacheSnapshot {
+        return snapshotOf(this.cache, this.now());
+    }
+
+    /**
+     * Restore a persisted cache. Expired and excess entries are dropped, so a
+     * stale or bloated file degrades gracefully instead of being trusted.
+     */
+    restore(entries: CacheSnapshot): void {
+        for (const [url, entry] of pruneSnapshot(entries, this.now(), this.maxEntries)) {
+            this.cache.set(url, entry);
+        }
     }
 
     private readCache(url: string): unknown {
@@ -177,6 +193,7 @@ export class OpenLibraryClient {
             if (!oldest.done) this.cache.delete(oldest.value);
         }
         this.cache.set(url, { value, expires: this.now() + this.ttlMs });
+        this.onWrite?.();
     }
 
     /** Fetch JSON with caching, spacing, cooldown and backoff. */

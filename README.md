@@ -24,6 +24,10 @@ You see exactly what will be created, and can deselect anything, before a single
 
 ![Importing from Goodreads](docs/images/import.png)
 
+### Take your library with you
+
+Export the whole library as a CSV in the same shape Goodreads produces, so it can be imported into other reading trackers. Your notes and reviews stay in the vault; the file is written beside your notes, not hidden in a download folder.
+
 ### Your library, as a library
 
 A cover grid of everything you have, filtered by shelf, searchable by title, author or series. Books in progress show how far through you are.
@@ -111,6 +115,7 @@ Every action is available from the command palette and from the panel inside eac
 | Download covers into the vault | Make covers work offline |
 | Add missing covers | Fill in covers from ISBNs |
 | Import from Goodreads | Bring your library across |
+| Export your library as CSV | Take your library to another tracker |
 
 ## How your data is stored
 
@@ -150,7 +155,7 @@ Choose where book notes live and how they are named, which heading holds the rea
 
 Book metadata comes from [Open Library](https://openlibrary.org), [Google Books](https://books.google.com), the [Library of Congress](https://www.loc.gov) and the [Internet Archive](https://archive.org). Cover images come from Open Library.
 
-Dogear ships no API key and runs no proxy: requests go from your machine to those services directly. Rate limits are respected on the client side, and bulk cover downloading is opt-in and deliberately slow, in keeping with Open Library's request that its cover service not be used for bulk downloads.
+Dogear ships no API key and runs no proxy: requests go from your machine to those services directly. Rate limits are respected on the client side, and bulk cover downloading is opt-in and deliberately slow, in keeping with Open Library's request that its cover service not be used for bulk downloads. Metadata responses are cached in the plugin's own folder and survive a restart, so starting Obsidian again does not repeat lookups it already made.
 
 ## Contributing
 
@@ -158,7 +163,7 @@ Issues and pull requests are welcome.
 
 ```bash
 npm install
-npm test     # 1,267 tests
+npm test     # 1,350 tests
 npm run dev  # watch build
 ```
 

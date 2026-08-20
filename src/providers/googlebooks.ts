@@ -17,6 +17,7 @@
 // without a network.
 
 import type { BookMetadata, BookProvider, SearchHit } from './types';
+import { pruneSnapshot, snapshotOf, type CacheSnapshot, type CachedResponse } from '../cachestore';
 import { TokenBucket } from '../ratelimit';
 import {
     ProviderConfigError,
@@ -242,6 +243,8 @@ export interface GoogleBooksOptions {
     maxEntries?: number;
     defaultCooldownMs?: number;
     now?: () => number;
+    /** Called after a response is cached, so the caller can persist it. */
+    onCacheWrite?: () => void;
 }
 
 export class GoogleBooksProvider implements BookProvider {
@@ -249,7 +252,7 @@ export class GoogleBooksProvider implements BookProvider {
     readonly label = 'Google Books';
     readonly attribution = 'Google Books';
 
-    private cache = new Map<string, { value: unknown; expires: number }>();
+    private cache = new Map<string, CachedResponse>();
     private cooldownUntil = 0;
     private readonly now: () => number;
 
@@ -329,6 +332,7 @@ export class GoogleBooksProvider implements BookProvider {
             value: res.json,
             expires: this.now() + (this.options.ttlMs ?? 24 * 60 * 60 * 1000),
         });
+        this.options.onCacheWrite?.();
         return res.json;
     }
 
@@ -355,5 +359,18 @@ export class GoogleBooksProvider implements BookProvider {
 
     clearCache(): void {
         this.cache.clear();
+    }
+
+    /** The live cache, for persisting it across restarts. */
+    snapshot(): CacheSnapshot {
+        return snapshotOf(this.cache, this.now());
+    }
+
+    /** Restore a persisted cache, dropping expired and excess entries. */
+    restore(entries: CacheSnapshot): void {
+        const max = this.options.maxEntries ?? 200;
+        for (const [url, entry] of pruneSnapshot(entries, this.now(), max)) {
+            this.cache.set(url, entry);
+        }
     }
 }
