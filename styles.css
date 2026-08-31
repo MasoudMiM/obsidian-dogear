@@ -1253,3 +1253,40 @@
 .is-phone .dogear-stats__coltrack {
   height: 90px;
 }
+
+/* -------------------------------------------------------- book enrichment -- */
+
+.dogear-enrich-modal .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.dogear-enrich__current,
+.dogear-enrich__found,
+.dogear-enrich__preview {
+  margin-bottom: var(--size-4-4);
+  padding: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background-color: var(--background-secondary);
+}
+
+.dogear-enrich__current h3,
+.dogear-enrich__found h3,
+.dogear-enrich__preview h3 {
+  margin-top: 0;
+  margin-bottom: var(--size-4-3);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+}
+
+.dogear-enrich__field {
+  margin-bottom: var(--size-2-2);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.dogear-enrich__field:last-child {
+  margin-bottom: 0;
+}
