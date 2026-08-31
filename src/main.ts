@@ -54,6 +54,8 @@ import { CoverModal } from './ui/coverModal';
 import { LibraryView, VIEW_TYPE_LIBRARY, openLibrary as revealLibrary } from './ui/libraryView';
 import { StatsView, VIEW_TYPE_STATS, openStats as revealStats } from './ui/statsView';
 import { DogearSettingTab } from './ui/settingsTab';
+import { BookEnrichModal } from './ui/enrichModal';
+import { buildEnrichQuery } from './enrich';
 
 export default class DogearPlugin extends Plugin {
     settings: DogearSettings = { ...DEFAULT_SETTINGS };
@@ -287,6 +289,17 @@ export default class DogearPlugin extends Plugin {
                 const file = this.app.workspace.getActiveFile();
                 if (!file || !this.isBookNote(file)) return false;
                 if (!checking) void this.openBookModal(file);
+                return true;
+            },
+        });
+
+        this.addCommand({
+            id: 'enrich-book',
+            name: 'Enrich this book',
+            checkCallback: (checking: boolean) => {
+                const file = this.app.workspace.getActiveFile();
+                if (!file || !this.isBookNote(file)) return false;
+                if (!checking) void this.enrichBook(file);
                 return true;
             },
         });
@@ -917,5 +930,56 @@ export default class DogearPlugin extends Plugin {
         // behaviour when opening a note from a modal. A modifier click asks
         // for a new one.
         await this.app.workspace.getLeaf(newTab ? 'tab' : false).openFile(file);
+    }
+
+    /**
+     * Enrich a manually added book with metadata from a book source.
+     * 
+     * This allows a user to add a book manually and then later enrich it with
+     * metadata from a source like Open Library, Google Books, etc.
+     */
+    private async enrichBook(file: TFile): Promise<void> {
+        const loaded = await this.repo.loadDetailed(file.path);
+        if (!loaded) {
+            new Notice("Dogear: couldn't read that note.");
+            return;
+        }
+
+        const book = loaded.book;
+
+        const searchQuery = buildEnrichQuery(book);
+        const notice = new Notice('Dogear: searching for book details…', 0);
+
+        try {
+            // Use the provider chain to search for the book
+            const result = await this.chain.search(searchQuery, 1);
+            
+            if (result.hits.length === 0) {
+                notice.hide();
+                new Notice('Dogear: no matching book found for enrichment.');
+                return;
+            }
+            
+            const hit = result.hits[0];
+            const metadata = await this.chain.resolve(hit);
+            
+            notice.hide();
+            
+            // Create a modal to confirm the enrichment
+            new BookEnrichModal(this.app, {
+                book,
+                metadata,
+                onSave: async (updatedBook) => {
+                    await this.repo.save(file.path, updatedBook);
+                    new Notice('Dogear: book enriched successfully.');
+                    this.refreshLibrary();
+                }
+            }).open();
+            
+        } catch (err) {
+            notice.hide();
+            const message = err instanceof Error ? err.message : String(err);
+            new Notice(`Dogear: couldn't enrich book. ${message}`);
+        }
     }
 }

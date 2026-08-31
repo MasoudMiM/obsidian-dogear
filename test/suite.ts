@@ -59,6 +59,7 @@ import { runProviderTests } from './providers.test';
 import { runStatusTests } from './status.test';
 import { runCacheStoreTests } from './cachestore.test';
 import { runExportTests } from './export.test';
+import { runEnrichTests } from './enrich.test';
 
 // --- tiny harness -----------------------------------------------------------
 
@@ -815,6 +816,7 @@ await runFuzzTests({ describe, ok, eq, close });
 await runStatusTests({ describe, ok, eq, close });
 await runCacheStoreTests({ describe, ok, eq, close });
 await runExportTests({ describe, ok, eq, close });
+await runEnrichTests({ describe, ok, eq, close });
 
 // --- report -----------------------------------------------------------------
 
