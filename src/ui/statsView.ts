@@ -13,6 +13,7 @@
 
 import { ItemView, WorkspaceLeaf, type App } from 'obsidian';
 import { STATUS_LABELS, type Book } from '../model';
+import { readingGoalFor } from '../settings';
 import {
     computeStats,
     describeListening,
@@ -25,11 +26,18 @@ export const VIEW_TYPE_STATS = 'dogear-stats';
 
 export interface StatsHost {
     all: () => Promise<Array<{ path: string; book: Book }>>;
+    /** Reading goals by year, so goal years appear even before any book lands. */
+    goals: () => Record<string, number>;
 }
 
 export class StatsView extends ItemView {
     private entries: Array<{ path: string; book: Book }> = [];
     private year: number | null = null;
+    /**
+     * Whether the reader picked a period. Without this, every refresh would
+     * snap "All time" back to the most recent year.
+     */
+    private yearChosen = false;
     private loading = true;
 
     constructor(
@@ -61,14 +69,32 @@ export class StatsView extends ItemView {
         this.loading = true;
         try {
             this.entries = await this.host.all();
-            // Default to the most recent year with any reading in it, since
-            // "this year" is the question people actually arrive with.
-            const years = yearsPresent(this.entries.map((e) => e.book));
-            if (this.year === null && years.length > 0) this.year = years[0];
+            const years = this.yearsToOffer(this.entries.map((e) => e.book));
+            if (!this.yearChosen && years.length > 0) this.year = this.defaultYear(years);
         } finally {
             this.loading = false;
         }
         this.render();
+    }
+
+    /** Years with reading in them, plus any year carrying a goal. */
+    private yearsToOffer(books: Book[]): number[] {
+        const years = new Set(yearsPresent(books));
+        for (const key of Object.keys(this.host.goals())) {
+            const year = Number(key);
+            if (Number.isInteger(year)) years.add(year);
+        }
+        return [...years].sort((a, b) => b - a);
+    }
+
+    /**
+     * Open on this year when it has anything to show, otherwise the most
+     * recent year with reading. A goal with no books yet is still worth
+     * opening on.
+     */
+    private defaultYear(years: number[]): number {
+        const current = new Date().getFullYear();
+        return years.includes(current) ? current : years[0];
     }
 
     async onClose(): Promise<void> {
@@ -86,10 +112,11 @@ export class StatsView extends ItemView {
         }
 
         const books = this.entries.map((e) => e.book);
-        const years = yearsPresent(books);
-        const stats = computeStats(this.entries, this.year);
+        const years = this.yearsToOffer(books);
+        const goal = this.year === null ? undefined : readingGoalFor(this.host.goals(), this.year);
+        const stats = computeStats(this.entries, this.year, goal);
 
-        if (books.length === 0) {
+        if (books.length === 0 && stats.goal === null) {
             root.createDiv({
                 cls: 'dogear-stats__empty',
                 text: 'Nothing to report yet. Finish a book and this page will fill in.',
@@ -98,6 +125,7 @@ export class StatsView extends ItemView {
         }
 
         this.renderYearPicker(root, years);
+        this.renderGoal(root, stats);
         this.renderHeadline(root, stats);
         this.renderTrend(root, stats);
         this.renderRatings(root, stats);
@@ -132,6 +160,7 @@ export class StatsView extends ItemView {
 
             btn.addEventListener('click', () => {
                 this.year = value;
+                this.yearChosen = true;
                 this.render();
             });
             btn.addEventListener('keydown', (evt: KeyboardEvent) => {
@@ -140,12 +169,50 @@ export class StatsView extends ItemView {
                 evt.preventDefault();
                 const next = (index + step + options.length) % options.length;
                 this.year = options[next][0];
+                this.yearChosen = true;
                 this.render();
                 const tabs = (this.containerEl.children[1] as HTMLElement)
                     .querySelectorAll<HTMLElement>('.dogear-stats__year');
                 tabs[next]?.focus();
             });
         });
+    }
+
+    // --- the year's goal ----------------------------------------------------
+
+    private renderGoal(parent: HTMLElement, stats: Stats): void {
+        const goal = stats.goal;
+        if (!goal) return;
+
+        const panel = this.panel(parent, 'Reading goal');
+        const body = panel.createDiv({ cls: 'dogear-stats__goal' });
+
+        const top = body.createDiv({ cls: 'dogear-stats__goaltop' });
+        top.createDiv({
+            cls: 'dogear-stats__goallabel',
+            text: `${goal.finished} of ${goal.target} ${goal.target === 1 ? 'book' : 'books'}`,
+        });
+        top.createDiv({
+            cls: 'dogear-stats__goalpercent',
+            text: `${Math.round((goal.finished / goal.target) * 100)}%`,
+        });
+
+        const track = body.createDiv({ cls: 'dogear-stats__goaltrack' });
+        track.setAttr('role', 'progressbar');
+        track.setAttr('aria-valuemin', '0');
+        track.setAttr('aria-valuemax', String(Math.max(goal.target, goal.finished)));
+        track.setAttr('aria-valuenow', String(goal.finished));
+        const fill = track.createDiv({ cls: 'dogear-stats__goalfill' });
+        fill.style.setProperty('--dogear-goal', `${Math.round(goal.fraction * 100)}%`);
+        if (goal.remaining === 0) fill.addClass('is-complete');
+
+        const note =
+            goal.remaining > 0
+                ? `${goal.remaining} ${goal.remaining === 1 ? 'book' : 'books'} to go.`
+                : goal.finished === goal.target
+                  ? 'Goal reached.'
+                  : `Goal reached, ${goal.finished - goal.target} past it.`;
+        body.createDiv({ cls: 'dogear-stats__goalnote', text: note });
     }
 
     // --- the numbers people came for ---------------------------------------

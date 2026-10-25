@@ -164,7 +164,11 @@ export default class DogearPlugin extends Plugin {
 
         this.registerView(
             VIEW_TYPE_STATS,
-            (leaf) => new StatsView(leaf, { all: () => this.repo.all() }),
+            (leaf) =>
+                new StatsView(leaf, {
+                    all: () => this.repo.all(),
+                    goals: () => this.settings.readingGoals,
+                }),
         );
 
         this.addRibbonIcon('library', 'Open your library', () => void revealLibrary(this.app));
@@ -334,6 +338,9 @@ export default class DogearPlugin extends Plugin {
 
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);
+        // Goals and other display settings are read when the stats view
+        // renders, so a change in settings should not wait for a book edit.
+        this.refreshLibrary();
     }
 
     // --- persistent metadata cache -------------------------------------------

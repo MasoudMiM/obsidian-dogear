@@ -26,9 +26,10 @@ welcome as [issues](https://github.com/MasoudMiM/obsidian-dogear/issues).
 - **A year-end summary.** The one genuinely delightful thing reading trackers
   do, and the feature people most often say they stay for.
 - **Barcode scanning on mobile**, for adding physical shelves in bulk.
-- **Reading goals and streaks**, strictly opt-in and off by default. Some
-  readers find them motivating; others specifically want a tracker that does
-  not keep score.
+- **Reading streaks**, strictly opt-in and off by default. Goals are already
+  available; streaks would build on the same per-year record. Some readers
+  find them motivating; others specifically want a tracker that does not keep
+  score.
 
 ## Not planned
 

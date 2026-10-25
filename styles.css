@@ -380,6 +380,16 @@
   color: var(--text-warning);
 }
 
+.dogear-settings__goals {
+  margin-bottom: var(--size-4-2);
+}
+
+.dogear-settings__empty {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  padding: var(--size-2-2) 0;
+}
+
 .dogear-settings__credit {
   margin-top: var(--size-4-6);
   padding-top: var(--size-4-3);
@@ -423,7 +433,8 @@
 /* --------------------------------------------------------- reduced motion -- */
 
 @media (prefers-reduced-motion: reduce) {
-  .dogear-progress__fill {
+  .dogear-progress__fill,
+  .dogear-stats__goalfill {
     transition: none;
   }
 }
@@ -1070,6 +1081,57 @@
 }
 
 .dogear-stats__note {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+
+/* --- reading goal --- */
+
+.dogear-stats__goal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+}
+
+.dogear-stats__goaltop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--size-4-2);
+}
+
+.dogear-stats__goallabel {
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+.dogear-stats__goalpercent {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dogear-stats__goaltrack {
+  height: 12px;
+  border-radius: var(--radius-s);
+  background-color: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.dogear-stats__goalfill {
+  height: 100%;
+  width: var(--dogear-goal, 0%);
+  border-radius: var(--radius-s);
+  background-color: var(--interactive-accent);
+  transition: width 200ms ease-out;
+}
+
+.dogear-stats__goalfill.is-complete {
+  background-color: var(--color-green);
+}
+
+.dogear-stats__goalnote {
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }

@@ -7,7 +7,7 @@
 //   - Sentence case throughout.
 //   - Headings via Setting.setHeading(), never raw <h2> elements.
 
-import { App, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Notice, Plugin, PluginSettingTab, Setting, type TextComponent } from 'obsidian';
 import { FORMAT_LABELS, type Format } from '../model';
 import { renderFilenameTemplate, sanitiseFilename } from '../paths';
 import {
@@ -138,6 +138,108 @@ export class DogearSettingTab extends PluginSettingTab {
                         save();
                     }),
             );
+
+        // --- reading goal ---------------------------------------------------
+
+        new Setting(containerEl).setName('Reading goal').setHeading();
+
+        const goalHost = containerEl.createDiv({ cls: 'dogear-settings__goals' });
+        const renderGoals = () => {
+            goalHost.empty();
+            const years = Object.keys(s.readingGoals)
+                .map(Number)
+                .filter((year) => Number.isInteger(year))
+                .sort((a, b) => b - a);
+
+            if (years.length === 0) {
+                goalHost.createDiv({
+                    cls: 'dogear-settings__empty',
+                    text: 'No goals yet. Set one below and the statistics page will track it.',
+                });
+                return;
+            }
+
+            for (const year of years) {
+                const row = new Setting(goalHost).setName(String(year));
+                row.addText((text) => {
+                    text.inputEl.type = 'number';
+                    text.inputEl.min = '1';
+                    text.inputEl.max = '10000';
+                    text.setPlaceholder('Books')
+                        .setValue(String(s.readingGoals[String(year)]))
+                        .onChange((value) => {
+                            const target = Number.parseInt(value, 10);
+                            if (Number.isFinite(target) && target > 0) {
+                                s.readingGoals[String(year)] = Math.min(target, 10000);
+                                save();
+                            }
+                        });
+                    // Leaving a blank or invalid field should show what was
+                    // actually stored rather than an empty box.
+                    text.inputEl.addEventListener('blur', () => {
+                        text.setValue(String(s.readingGoals[String(year)]));
+                    });
+                });
+                row.addExtraButton((btn) =>
+                    btn
+                        .setIcon('trash-2')
+                        .setTooltip('Remove this goal')
+                        .onClick(() => {
+                            delete s.readingGoals[String(year)];
+                            save();
+                            renderGoals();
+                        }),
+                );
+            }
+        };
+        renderGoals();
+
+        let newGoalYear = String(new Date().getFullYear());
+        let newGoalTarget = '';
+        let newGoalTargetInput: TextComponent | null = null;
+        const addGoal = new Setting(containerEl)
+            .setName('Add a goal')
+            .setDesc(
+                "Goals are kept per year, so next year's target never rewrites last year's.",
+            );
+        addGoal.addText((text) => {
+            text.inputEl.type = 'number';
+            text.inputEl.min = '1000';
+            text.inputEl.max = '9999';
+            text.setPlaceholder('Year')
+                .setValue(newGoalYear)
+                .onChange((value) => {
+                    newGoalYear = value;
+                });
+        });
+        addGoal.addText((text) => {
+            newGoalTargetInput = text;
+            text.inputEl.type = 'number';
+            text.inputEl.min = '1';
+            text.inputEl.max = '10000';
+            text.setPlaceholder('Books').onChange((value) => {
+                newGoalTarget = value;
+            });
+        });
+        addGoal.addButton((btn) =>
+            btn.setButtonText('Add').onClick(() => {
+                const year = Number.parseInt(newGoalYear, 10);
+                const target = Number.parseInt(newGoalTarget, 10);
+                if (!Number.isInteger(year) || year < 1000 || year > 9999) {
+                    new Notice('Dogear: enter a four-digit year.');
+                    return;
+                }
+                if (!Number.isFinite(target) || target < 1) {
+                    new Notice('Dogear: enter how many books you want to read.');
+                    return;
+                }
+                s.readingGoals[String(year)] = Math.min(target, 10000);
+                save();
+                newGoalTarget = '';
+                newGoalTargetInput?.setValue('');
+                renderGoals();
+            }),
+        );
 
         // --- book data ------------------------------------------------------
 
