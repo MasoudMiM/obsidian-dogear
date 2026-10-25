@@ -41,6 +41,21 @@ export interface Bucket {
     count: number;
 }
 
+/** Progress towards a year's reading goal. */
+export interface GoalProgress {
+    /** Books the reader set out to finish. */
+    target: number;
+    /** Books actually finished in the year. */
+    finished: number;
+    /** Books still needed, zero once the goal is reached. */
+    remaining: number;
+    /**
+     * Progress for the bar, capped at 1 so overshooting fills the bar rather
+     * than overflowing it. `finished` keeps the uncapped number.
+     */
+    fraction: number;
+}
+
 export interface Stats {
     /** Books finished in the selected span. */
     finished: number;
@@ -65,6 +80,32 @@ export interface Stats {
     shelves: Array<{ status: ReadingStatus; count: number }>;
     /** Finished books carrying no date, so they cannot be placed in a year. */
     undated: number;
+    /** Progress towards the selected year's goal, or null when none is set. */
+    goal: GoalProgress | null;
+}
+
+/**
+ * Compare finished books with a goal.
+ *
+ * Kept separate from `computeStats` because the arithmetic is small and easy
+ * to get subtly wrong at the edges: a goal of zero is no goal, and finishing
+ * more books than planned must not produce a negative remainder.
+ */
+export function goalProgress(
+    finished: number,
+    target: number | undefined,
+): GoalProgress | null {
+    if (target === undefined || !Number.isFinite(target)) return null;
+    const whole = Math.floor(target);
+    if (whole < 1) return null;
+
+    const done = Math.max(0, finished);
+    return {
+        target: whole,
+        finished: done,
+        remaining: Math.max(whole - done, 0),
+        fraction: Math.min(done / whole, 1),
+    };
 }
 
 /** The year a book was finished, or null if unknown. */
@@ -136,11 +177,13 @@ export function lengthBand(pages: number): string {
 /**
  * Compute everything for a span.
  *
- * `year` of null means the whole library.
+ * `year` of null means the whole library. `goal` is the target for that year,
+ * if the reader set one; it has no meaning for the whole library.
  */
 export function computeStats(
     entries: Array<{ book: Book }>,
     year: number | null,
+    goal?: number,
 ): Stats {
     const books = entries.map((e) => e.book);
 
@@ -260,6 +303,7 @@ export function computeStats(
         byMonth,
         shelves,
         undated,
+        goal: year === null ? null : goalProgress(inSpan.length, goal),
     };
 }
 

@@ -43,6 +43,14 @@ export interface DogearSettings {
      * folder, so people who keep attachments somewhere specific can say so.
      */
     coverFolder: string;
+    /**
+     * Reading goals, keyed by four-digit year.
+     *
+     * Stored per year rather than as a single number so raising next year's
+     * target never rewrites what last year's goal was. An absent year means
+     * no goal, which is what keeps the feature off by default.
+     */
+    readingGoals: Record<string, number>;
 }
 
 /** Every provider Dogear knows about, in default order. */
@@ -68,6 +76,7 @@ export const DEFAULT_SETTINGS: DogearSettings = {
     googleApiKey: '',
     googleCountry: '',
     coverFolder: 'Books/covers',
+    readingGoals: {},
 };
 
 /**
@@ -123,8 +132,41 @@ export function normaliseSettings(raw: unknown): DogearSettings {
         const code = input.googleCountry.trim().toUpperCase();
         out.googleCountry = /^[A-Z]{2}$/.test(code) ? code : '';
     }
+    out.readingGoals = normaliseReadingGoals(input.readingGoals);
 
     return out;
+}
+
+/**
+ * Validate the per-year reading goals map.
+ *
+ * Hand-edited settings are the reason this exists: a goal is only useful if it
+ * is a whole, positive number of books attached to a real year. Anything else
+ * is dropped rather than turned into a progress bar that cannot be trusted.
+ */
+export function normaliseReadingGoals(raw: unknown): Record<string, number> {
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return {};
+
+    const out: Record<string, number> = {};
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+        const year = Number(key);
+        if (!Number.isInteger(year) || year < 1000 || year > 9999) continue;
+        if (typeof value !== 'number' || !Number.isFinite(value)) continue;
+
+        const target = Math.floor(value);
+        // A goal of zero is the same as having no goal.
+        if (target < 1) continue;
+        out[String(year)] = Math.min(target, 10000);
+    }
+    return out;
+}
+
+/** The goal for a year, or undefined when none is set. */
+export function readingGoalFor(
+    goals: Record<string, number>,
+    year: number,
+): number | undefined {
+    return goals[String(year)];
 }
 
 /**

@@ -86,6 +86,8 @@ Covers come from Open Library, whose collection is good but far from complete; b
 
 Books and pages finished, how you rated them, how long they were, and which authors you returned to, by year or across everything. Audiobooks are counted in hours rather than pages (if the correct property was included in the entry), so listening is not quietly excluded.
 
+Set a reading goal for a year in settings and the statistics page shows how far through it you are. Goals are stored per year, so raising this year's target leaves last year's alone, and no goal is shown unless you set one.
+
 Deliberately small: every figure works from a finish date, a rating and a page count, because that is all an imported library knows. No mood tracking, no genre charts, no streaks.
 
 ![Reading statistics](docs/images/stats.png)
@@ -149,7 +151,7 @@ Nothing is hidden in a database. Your reading log is readable text, your own not
 
 ## Settings
 
-Choose where book notes live and how they are named, which heading holds the reading log, your default format, which metadata sources to use and in what order, and where downloaded covers are kept.
+Choose where book notes live and how they are named, which heading holds the reading log, your default format, which metadata sources to use and in what order, where downloaded covers are kept, and a reading goal for any year.
 
 ## Data sources and attribution
 
