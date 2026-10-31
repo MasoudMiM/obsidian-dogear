@@ -71,6 +71,7 @@ export class OpenLibraryProvider implements BookProvider {
             published: meta.published,
             pages: meta.pages,
             tags: meta.tags,
+            description: meta.description,
             olWork: meta.olWork,
             olEdition: meta.olEdition,
             source: OL_PROVIDER_ID,

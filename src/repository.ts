@@ -22,6 +22,7 @@ import {
     type NoteIssue,
     renderReadingLog,
     replaceSection,
+    withSummary,
     DEFAULT_LOG_HEADING,
 } from './note';
 import { renderFilenameTemplate, uniquePath } from './paths';
@@ -140,6 +141,18 @@ export class BookRepository {
         await this.vault.process(path, (content) =>
             replaceSection(content, this.heading, renderReadingLog(sessions, metrics)),
         );
+    }
+
+    /**
+     * Write the Summary section only, leaving frontmatter, the reading log and
+     * the reader's Notes untouched.
+     *
+     * This is the single point at which the summary enters the note. After it
+     * runs, the section belongs to the reader: no other Dogear writer touches
+     * it, so a hand edit survives every subsequent save.
+     */
+    async writeSummary(path: string, summary: string): Promise<void> {
+        await this.vault.process(path, (content) => withSummary(content, summary));
     }
 
     /**

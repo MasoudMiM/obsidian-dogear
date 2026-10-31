@@ -21,7 +21,7 @@ import {
 } from '../src/providers/types';
 import { workToHit } from '../src/providers/openlibrary';
 import { ProviderConfigError, RateLimitError, type HttpResponse } from '../src/olclient';
-import { mapSearchResponse } from '../src/openlibrary';
+import { mapSearchResponse, resolveMetadata, type Edition } from '../src/openlibrary';
 import {
     buildIaSearchUrl,
     escapeLucene,
@@ -62,6 +62,9 @@ const GOOGLE_JSON = {
                 ],
                 pageCount: 1246,
                 categories: ['Biography & Autobiography', 'Political Science'],
+                description:
+                    '<p>The story of <b>Robert Moses</b>, the master builder of ' +
+                    'modern New York.</p><p>Astonishing in scope.</p>',
                 imageLinks: {
                     smallThumbnail: 'http://books.google.com/books/content?id=x&zoom=5&edge=curl',
                     thumbnail: 'http://books.google.com/books/content?id=x&zoom=1&edge=curl',
@@ -126,10 +129,15 @@ export async function runProviderTests(h: Harness): Promise<void> {
         eq(caro.tags.length, 2, 'categories became tags');
         ok(caro.coverUrl?.startsWith('https://') ?? false, 'cover upgraded to https');
         eq(caro.complete, true, 'Google hits need no second request');
+        ok(
+            caro.description?.includes('Robert Moses') ?? false,
+            'the HTML description is captured on the hit',
+        );
 
         eq(minimal.title, 'Just a Title', 'a sparse record still maps');
         eq(minimal.authors, [], 'missing authors become an empty list');
         eq(minimal.pages, undefined, 'missing page count stays undefined');
+        eq(minimal.description, undefined, 'a record with no description stays undefined');
 
         eq(mapGoogleResponse({}), [], 'empty response handled');
         eq(mapGoogleResponse(null), [], 'null response handled');
@@ -148,6 +156,10 @@ export async function runProviderTests(h: Harness): Promise<void> {
         eq(meta.googleId, 'hkEKEAAAQBAJ', 'volume id retained');
         eq(meta.source, 'googlebooks', 'source recorded');
         eq(meta.olWork, undefined, 'no Open Library keys on a Google record');
+        ok(
+            meta.description?.includes('Robert Moses') ?? false,
+            'description carried from hit into metadata',
+        );
     });
 
     await describe('google books: country detection from locale', () => {
@@ -631,6 +643,72 @@ export async function runProviderTests(h: Harness): Promise<void> {
         eq(h.complete, false, 'an Open Library work still needs resolving');
         ok(h.coverUrl?.includes('240727') ?? false, 'cover URL built');
         eq(h.raw, work, 'the original work is kept for resolve()');
+    });
+
+    await describe('open library: the description is captured', () => {
+        // Search results serve the description as a plain string.
+        const fromSearch = mapSearchResponse({
+            docs: [
+                {
+                    key: '/works/OL1W',
+                    title: 'A Book',
+                    author_name: ['Someone'],
+                    description: '<p>A plain search description.</p>',
+                },
+            ],
+        })[0];
+        eq(fromSearch.description, '<p>A plain search description.</p>', 'search description (string) captured');
+
+        // Editions serve it as a typed object; both shapes must be accepted.
+        const fromEditions = mapSearchResponse({
+            docs: [
+                {
+                    key: '/works/OL2W',
+                    title: 'Another Book',
+                    author_name: ['Someone Else'],
+                    description: { value: 'A typed edition description.', type: 'text' },
+                },
+            ],
+        })[0];
+        eq(fromEditions.description, 'A typed edition description.', 'typed {value} description captured');
+
+        // A work with no description at all stays undefined.
+        const none = mapSearchResponse({
+            docs: [{ key: '/works/OL3W', title: 'Bare', author_name: ['X'] }],
+        })[0];
+        eq(none.description, undefined, 'a missing description stays undefined');
+    });
+
+    await describe('open library: the resolved summary prefers the work', () => {
+        const work = {
+            workKey: '/works/OL1W',
+            title: 'A Book',
+            authors: ['Someone'],
+            isbns: [] as string[],
+            publishers: [] as string[],
+            subjects: [] as string[],
+            description: '<p>The work-level blurb.</p>',
+        };
+        const edition: Edition = {
+            editionKey: '/books/OL1M',
+            publishers: [],
+            languages: ['eng'],
+            description: '<p>The edition-level blurb.</p>',
+        };
+
+        const withBoth = resolveMetadata(work, edition);
+        eq(withBoth.description, '<p>The work-level blurb.</p>', 'the work blurb wins when both exist');
+
+        const workBare = { ...work, description: undefined };
+        const fromEdition = resolveMetadata(workBare, edition);
+        eq(fromEdition.description, '<p>The edition-level blurb.</p>', 'the edition blurb fills the gap');
+
+        const noneAtAll = resolveMetadata(workBare, { ...edition, description: undefined });
+        eq(noneAtAll.description, undefined, 'neither has a description');
+
+        // A resolve with no edition falls back to the work alone.
+        const workOnly = resolveMetadata(work, null);
+        eq(workOnly.description, '<p>The work-level blurb.</p>', 'work blurb used when no edition resolves');
     });
 
     // --- proactive rate limiting --------------------------------------------

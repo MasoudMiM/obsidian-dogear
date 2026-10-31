@@ -25,6 +25,8 @@ import {
     serialiseBookNote,
     parseFormatLabel,
     newBookNote,
+    withSummary,
+    SUMMARY_HEADING,
     DEFAULT_LOG_HEADING,
 } from '../src/note';
 
@@ -330,6 +332,53 @@ export async function runNoteTests(h: Harness): Promise<void> {
         const ns = splitBody(nested, 'Reading log');
         ok(ns.section.includes('### Read 1'), 'sub-heading stays inside the section');
         ok(ns.after.includes('## After'), 'next same-level heading starts the tail');
+    });
+
+    await describe('note: the summary section is written once and left alone', () => {
+        const fullNote = [
+            '---',
+            'title: The Dispossessed',
+            'pages: 100',
+            '---',
+            'Some intro prose.',
+            '',
+            '## Reading log',
+            '',
+            '### Read 1 — print',
+            '- 2024-01-01 · page 10',
+            '',
+            '## Notes',
+            '',
+            'My private thoughts.',
+        ].join('\n');
+
+        const summarised = withSummary(fullNote, 'An ambiguous utopia.\n\nSet on an anarchist moon.');
+        ok(summarised.includes('## Summary'), 'summary heading written');
+        ok(summarised.includes('An ambiguous utopia.'), 'summary text written');
+        ok(summarised.includes('Some intro prose.'), 'intro prose survives');
+        ok(summarised.includes('- 2024-01-01 · page 10'), 'reading log survives');
+        ok(summarised.includes('My private thoughts.'), "reader's notes survive");
+        // The summary lands before the reading log, so it is what you see first.
+        ok(summarised.indexOf('## Summary') < summarised.indexOf('## Reading log'), 'summary precedes the log');
+
+        // Running it again replaces cleanly rather than duplicating the section.
+        const reSummarised = withSummary(summarised, 'A new summary.');
+        eq(reSummarised.split('## Summary').length, 2, 'replacing does not duplicate the heading');
+        ok(reSummarised.includes('A new summary.'), 'new summary text written');
+        ok(!reSummarised.includes('An ambiguous utopia.'), 'old summary replaced');
+        ok(reSummarised.includes('My private thoughts.'), 'notes still survive a re-summary');
+
+        // A hand-edited summary must survive a save that only rewrites the log.
+        const edited = withSummary(fullNote, 'My own edited summary.');
+        const reLog = edited.replace('- 2024-01-01 · page 10', '- 2024-01-02 · page 11');
+        const roundTripped = serialiseBookNote(
+            parseBookNote(reLog).book,
+            reLog,
+            DEFAULT_LOG_HEADING,
+        );
+        ok(roundTripped.includes('My own edited summary.'), 'hand-edited summary survives a log save');
+        ok(roundTripped.includes('- 2024-01-02 · page 11'), 'the log change was written');
+        eq(SUMMARY_HEADING, 'Summary', 'heading constant is the expected value');
     });
 
     // --- whole note ---------------------------------------------------------

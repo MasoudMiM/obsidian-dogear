@@ -61,6 +61,7 @@ import { runCacheStoreTests } from './cachestore.test';
 import { runExportTests } from './export.test';
 import { runEnrichTests } from './enrich.test';
 import { runGoalTests } from './goal.test';
+import { runTextTests } from './text.test';
 
 // --- tiny harness -----------------------------------------------------------
 
@@ -819,6 +820,7 @@ await runCacheStoreTests({ describe, ok, eq, close });
 await runExportTests({ describe, ok, eq, close });
 await runEnrichTests({ describe, ok, eq, close });
 await runGoalTests({ describe, ok, eq, close });
+await runTextTests({ describe, ok, eq, close });
 
 // --- report -----------------------------------------------------------------
 

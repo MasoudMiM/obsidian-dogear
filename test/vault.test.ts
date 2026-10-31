@@ -1389,6 +1389,39 @@ export async function runVaultTests(h: Harness): Promise<void> {
         ok(logIdx < fmIdx, 'log written before frontmatter');
     });
 
+    await describe('repository: the summary is written once and survives saves', async () => {
+        const vault = new FakeVault();
+        const repo = new BookRepository(vault, () => DEFAULT_SETTINGS);
+        const { path } = await repo.create(makeBook());
+
+        ok(!(vault.files.get(path) as string).includes('## Summary'), 'a new note has no summary');
+
+        await repo.writeSummary(path, "The publisher's blurb.\n\nA second paragraph.");
+        const withSummary = vault.files.get(path) as string;
+        ok(withSummary.includes('## Summary'), 'summary section written');
+        ok(withSummary.includes("The publisher's blurb."), 'summary text written');
+        ok(withSummary.includes('## Reading log'), 'reading log still present');
+        ok(
+            withSummary.indexOf('## Summary') < withSummary.indexOf('## Reading log'),
+            'the summary leads the note, before the reading log',
+        );
+
+        // A save rewrites the log and frontmatter, but not the summary.
+        const book = (await repo.load(path)) as Book;
+        await repo.save(path, finishSession({ ...book, rating: 4 }, '2026-03-01'));
+        const afterSave = vault.files.get(path) as string;
+        ok(afterSave.includes("The publisher's blurb."), 'summary survives a save');
+        ok(afterSave.includes('A second paragraph.'), 'a multi-paragraph summary survives');
+        ok(afterSave.includes('status: finished'), 'and the save itself happened');
+
+        // Writing again replaces cleanly rather than duplicating the section.
+        await repo.writeSummary(path, 'A revised blurb.');
+        const revised = vault.files.get(path) as string;
+        eq(revised.split('## Summary').length, 2, 're-writing does not duplicate the heading');
+        ok(revised.includes('A revised blurb.'), 'the new summary is written');
+        ok(!revised.includes("The publisher's blurb."), 'the old summary is replaced');
+    });
+
     await describe('repository: clearing a managed field removes it', async () => {
         const vault = new FakeVault();
         const repo = new BookRepository(vault, () => DEFAULT_SETTINGS);
