@@ -5,8 +5,6 @@ welcome as [issues](https://github.com/MasoudMiM/obsidian-dogear/issues).
 
 ## Next
 
-- **Enrich a book added by hand.** A book entered manually should be able to
-  pull in covers and page counts later, once you know its ISBN.
 - **Search on demand.** Search-as-you-type is generous to the reader and
   wasteful against a rate-limited public catalogue. An explicit search option
   would suit people on slow or metered connections.
