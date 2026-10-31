@@ -121,6 +121,7 @@ Every action is available from the command palette and from the panel inside eac
 | Reading statistics | Your reading, by year |
 | Add a book | Search the metadata sources |
 | Add a book manually | No network required |
+| Enrich this book | Fill in missing metadata from the sources |
 | Add a summary to this book | Pull the publisher's blurb into the note |
 | Update reading progress | Log a position |
 | Set the cover for this book | Use an image from your vault |
