@@ -56,6 +56,7 @@ import { StatsView, VIEW_TYPE_STATS, openStats as revealStats } from './ui/stats
 import { DogearSettingTab } from './ui/settingsTab';
 import { BookEnrichModal } from './ui/enrichModal';
 import { buildEnrichQuery } from './enrich';
+import { stripHtml } from './text';
 
 export default class DogearPlugin extends Plugin {
     settings: DogearSettings = { ...DEFAULT_SETTINGS };
@@ -228,6 +229,12 @@ export default class DogearPlugin extends Plugin {
                             .setIcon('book-open')
                             .onClick(() => void this.openBookModal(file)),
                     );
+                    menu.addItem((item) =>
+                        item
+                            .setTitle('Add a summary')
+                            .setIcon('align-left')
+                            .onClick(() => void this.addSummary(file)),
+                    );
                 }
             }),
         );
@@ -240,6 +247,12 @@ export default class DogearPlugin extends Plugin {
                             .setTitle('Update reading progress')
                             .setIcon('book-open')
                             .onClick(() => void this.openBookModal(file)),
+                    );
+                    menu.addItem((item) =>
+                        item
+                            .setTitle('Add a summary')
+                            .setIcon('align-left')
+                            .onClick(() => void this.addSummary(file)),
                     );
                 }
             }),
@@ -304,6 +317,17 @@ export default class DogearPlugin extends Plugin {
                 const file = this.app.workspace.getActiveFile();
                 if (!file || !this.isBookNote(file)) return false;
                 if (!checking) void this.enrichBook(file);
+                return true;
+            },
+        });
+
+        this.addCommand({
+            id: 'add-summary',
+            name: 'Add a summary to this book',
+            checkCallback: (checking: boolean) => {
+                const file = this.app.workspace.getActiveFile();
+                if (!file || !this.isBookNote(file)) return false;
+                if (!checking) void this.addSummary(file);
                 return true;
             },
         });
@@ -760,6 +784,9 @@ export default class DogearPlugin extends Plugin {
                 if (file) void this.openBookModal(file);
             },
             editCover: () => this.editCover(sourcePath, loaded.book),
+            addSummary: () => {
+                if (file) void this.addSummary(file);
+            },
         });
         // Registering the child lets Obsidian unload it with the view, so no
         // references are held after the note closes.
@@ -987,6 +1014,54 @@ export default class DogearPlugin extends Plugin {
             notice.hide();
             const message = err instanceof Error ? err.message : String(err);
             new Notice(`Dogear: couldn't enrich book. ${message}`);
+        }
+    }
+
+    /**
+     * Add the publisher's summary to a book.
+     *
+     * Explicit by design: rather than writing a summary into every new note,
+     * the reader asks for it. The description comes from the same provider
+     * chain used to add and enrich books, so it inherits the fallback,
+     * rate-limiting and caching for free. It is stripped to plain prose and
+     * written to the note's Summary section — where, once written, it belongs
+     * to the reader and no other Dogear action touches it.
+     */
+    private async addSummary(file: TFile): Promise<void> {
+        const loaded = await this.repo.loadDetailed(file.path);
+        if (!loaded) {
+            new Notice("Dogear: couldn't read that note.");
+            return;
+        }
+
+        const book = loaded.book;
+        const query = buildEnrichQuery(book);
+        const notice = new Notice('Dogear: looking for a summary…', 0);
+
+        try {
+            const result = await this.chain.search(query, 1);
+            if (result.hits.length === 0) {
+                notice.hide();
+                new Notice('Dogear: none of your book sources know this title.');
+                return;
+            }
+
+            const metadata = await this.chain.resolve(result.hits[0]);
+            const summary = metadata.description ? stripHtml(metadata.description) : '';
+            notice.hide();
+
+            if (summary === '') {
+                new Notice('Dogear: no summary is available from the book sources.');
+                return;
+            }
+
+            const source = this.chain.byId(metadata.source)?.label ?? metadata.source;
+            await this.repo.writeSummary(file.path, summary);
+            new Notice(`Dogear: added a summary from ${source}.`);
+        } catch (err) {
+            notice.hide();
+            const message = err instanceof Error ? err.message : String(err);
+            new Notice(`Dogear: couldn't find a summary. ${message}`);
         }
     }
 }

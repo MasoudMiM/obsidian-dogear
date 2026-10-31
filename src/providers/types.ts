@@ -32,6 +32,8 @@ export interface SearchHit {
     publisher?: string;
     published?: string;
     tags: string[];
+    /** Publisher's blurb, as the provider serves it (usually HTML). */
+    description?: string;
     /**
      * True when the hit already carries everything Dogear stores, so
      * `resolve()` needs no further request.
@@ -52,6 +54,8 @@ export interface BookMetadata {
     published?: string;
     pages?: number;
     tags: string[];
+    /** Publisher's blurb, as the provider serves it (usually HTML). */
+    description?: string;
     /** Open Library keys, when that is where the record came from. */
     olWork?: string;
     olEdition?: string;

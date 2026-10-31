@@ -54,6 +54,17 @@ import {
 /** Heading that marks the section Dogear owns. Configurable in settings. */
 export const DEFAULT_LOG_HEADING = 'Reading log';
 
+/**
+ * Heading of the section that holds the publisher's summary.
+ *
+ * Dogear writes it once, on an explicit "add summary" action, and never
+ * touches it again — the same contract as the reader's own Notes. That is
+ * what lets the reader edit or replace the summary freely: a later save of
+ * progress or frontmatter rewrites only the reading log, and this section
+ * survives byte for byte.
+ */
+export const SUMMARY_HEADING = 'Summary';
+
 /** Frontmatter key order — keeps diffs small and the Properties panel tidy. */
 export const KEY_ORDER = [
     'dogear',
@@ -495,6 +506,53 @@ export function replaceSection(body: string, heading: string, content: string): 
     let out = before === '' ? block : `${before}\n\n${block}`;
     if (after !== '') out = `${out}\n${after}`;
     return out;
+}
+
+/**
+ * Insert or replace the Summary section, leaving every other part of the note
+ * — frontmatter, prose above, the reading log, the reader's Notes — intact.
+ *
+ * This is the only writer for the summary. Running it twice replaces the
+ * section cleanly, so it is safe on a note that already carries a hand-edited
+ * summary: the explicit action is what asks for the overwrite.
+ *
+ * On first insert the section is placed before the first heading in the body,
+ * so it leads the note's prose — after the dogear panel, before the reading
+ * log — rather than trailing it under the reader's Notes.
+ */
+export function withSummary(content: string, summary: string): string {
+    const { frontmatter, body } = splitNote(content);
+    const newBody = withSummaryBody(body, summary);
+    return joinNote(frontmatter, newBody);
+}
+
+function withSummaryBody(body: string, summary: string): string {
+    const block = `## ${SUMMARY_HEADING}\n\n${summary.trim()}\n`;
+
+    // Already present: replace in place, wherever the reader moved it.
+    if (splitBody(body, SUMMARY_HEADING).found) {
+        return replaceSection(body, SUMMARY_HEADING, summary);
+    }
+
+    // Find the first heading so the summary can lead the prose.
+    const lines = body.split(/\r?\n/);
+    let insertAt = lines.length;
+    for (let i = 0; i < lines.length; i++) {
+        if (/^##\s+/.test(lines[i])) {
+            insertAt = i;
+            break;
+        }
+    }
+
+    if (insertAt === lines.length) {
+        // No heading to lead with: append, matching replaceSection's behaviour.
+        const existing = body.replace(/\s+$/, '');
+        return existing === '' ? block : `${existing}\n\n${block}`;
+    }
+
+    const before = lines.slice(0, insertAt).join('\n').replace(/\s+$/, '');
+    const after = lines.slice(insertAt).join('\n');
+    return before === '' ? `${block}\n${after}` : `${before}\n\n${block}\n${after}`;
 }
 
 // --- book <-> note ----------------------------------------------------------

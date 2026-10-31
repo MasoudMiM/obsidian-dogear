@@ -39,6 +39,7 @@ export const SEARCH_FIELDS = [
     'isbn',
     'publisher',
     'subject',
+    'description',
 ].join(',');
 
 export function buildSearchUrl(query: string, limit = 20): string {
@@ -66,6 +67,8 @@ export interface WorkResult {
     isbns: string[];
     publishers: string[];
     subjects: string[];
+    /** The work-level description (HTML). */
+    description?: string;
 }
 
 function asArray(v: unknown): string[] {
@@ -99,6 +102,7 @@ export function mapSearchResponse(json: unknown): WorkResult[] {
             isbns: asArray(d.isbn),
             publishers: asArray(d.publisher),
             subjects: asArray(d.subject).slice(0, 12),
+            description: asDescription(d.description),
         });
     }
     return out;
@@ -139,11 +143,26 @@ export interface Edition {
     /** Language codes, e.g. ["eng"]. */
     languages: string[];
     physicalFormat?: string;
+    /** The edition's description (HTML), when it has one. */
+    description?: string;
 }
 
 function firstString(v: unknown): string | undefined {
     const arr = asArray(v);
     return arr.length > 0 ? arr[0] : undefined;
+}
+
+/**
+ * Open Library serves a description as a plain string in search results but as
+ * a typed object ({ value, type }) on editions. Accept both so either source
+ * works, and reject anything that is not ultimately a string.
+ */
+function asDescription(v: unknown): string | undefined {
+    if (typeof v === 'string') return v;
+    if (v && typeof v === 'object' && typeof (v as { value?: unknown }).value === 'string') {
+        return (v as { value: string }).value;
+    }
+    return undefined;
 }
 
 export function mapEditionsResponse(json: unknown): Edition[] {
@@ -178,6 +197,7 @@ export function mapEditionsResponse(json: unknown): Edition[] {
             languages,
             physicalFormat:
                 typeof e.physical_format === 'string' ? e.physical_format : undefined,
+            description: asDescription(e.description),
         });
     }
     return out;
@@ -283,6 +303,8 @@ export interface ResolvedBookMetadata {
     published?: string;
     pages?: number;
     tags: string[];
+    /** The publisher's blurb (HTML), work-level first then edition-level. */
+    description?: string;
     olWork: string;
     olEdition?: string;
 }
@@ -310,6 +332,9 @@ export function resolveMetadata(
         published: edition?.publishDate ?? (work.firstPublishYear?.toString() || undefined),
         pages: pages && pages > 0 ? Math.round(pages) : undefined,
         tags: work.subjects.slice(0, 8),
+        // The work carries the canonical blurb; the edition fills in when the
+        // work has none.
+        description: work.description ?? edition?.description,
         olWork: work.workKey,
         olEdition: edition?.editionKey,
     };

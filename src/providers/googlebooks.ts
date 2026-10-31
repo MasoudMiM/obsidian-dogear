@@ -191,6 +191,11 @@ export function mapGoogleResponse(json: unknown): SearchHit[] {
                 ? info.pageCount
                 : undefined;
 
+        const description =
+            typeof info.description === 'string' && info.description.trim() !== ''
+                ? info.description
+                : undefined;
+
         out.push({
             providerId: GOOGLE_PROVIDER_ID,
             id,
@@ -205,6 +210,7 @@ export function mapGoogleResponse(json: unknown): SearchHit[] {
             publisher: typeof info.publisher === 'string' ? info.publisher : undefined,
             published,
             tags: asStringArray(info.categories).slice(0, 8),
+            description,
             // Google returns everything in one call; there is nothing to fetch.
             complete: true,
         });
@@ -228,6 +234,7 @@ export function googleHitToMetadata(hit: SearchHit): BookMetadata {
         published: hit.published,
         pages: hit.pages,
         tags: hit.tags,
+        description: hit.description,
         googleId: hit.id,
         source: GOOGLE_PROVIDER_ID,
     };

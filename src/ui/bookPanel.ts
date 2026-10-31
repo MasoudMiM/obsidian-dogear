@@ -64,6 +64,8 @@ export interface PanelOptions {
     openDetails: () => void;
     /** Open the cover picker. */
     editCover: () => void;
+    /** Add the publisher's summary to this book's note. */
+    addSummary: () => void;
 }
 
 /**
@@ -193,6 +195,7 @@ export class BookPanel extends MarkdownRenderChild {
         });
         this.renderCoverButton(actions);
         this.renderDetailsButton(actions);
+        this.renderSummaryButton(actions);
     }
 
     // --- reading ------------------------------------------------------------
@@ -216,6 +219,7 @@ export class BookPanel extends MarkdownRenderChild {
 
         this.renderCoverButton(actions);
         this.renderDetailsButton(actions);
+        this.renderSummaryButton(actions);
         this.renderRating(parent, 'Rating');
     }
 
@@ -248,6 +252,7 @@ export class BookPanel extends MarkdownRenderChild {
         });
         this.renderCoverButton(actions);
         this.renderDetailsButton(actions);
+        this.renderSummaryButton(actions);
     }
 
     // --- did not finish -----------------------------------------------------
@@ -274,6 +279,7 @@ export class BookPanel extends MarkdownRenderChild {
         });
         this.renderCoverButton(actions);
         this.renderDetailsButton(actions);
+        this.renderSummaryButton(actions);
     }
 
     // --- shared pieces ------------------------------------------------------
@@ -295,6 +301,16 @@ export class BookPanel extends MarkdownRenderChild {
         });
         details.setAttr('type', 'button');
         details.addEventListener('click', () => this.options.openDetails());
+    }
+
+    /** Fetch and store the publisher's summary in the note. */
+    private renderSummaryButton(parent: HTMLElement): void {
+        const btn = parent.createEl('button', {
+            cls: 'dogear-panel__details',
+            text: 'Add summary',
+        });
+        btn.setAttr('type', 'button');
+        btn.addEventListener('click', () => this.options.addSummary());
     }
 
     private renderFormatPicker(parent: HTMLElement): void {

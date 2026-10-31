@@ -82,6 +82,15 @@ Covers come from Open Library, whose collection is good but far from complete; b
 
 ![Setting a cover by hand](docs/images/cover.png)
 
+### A summary, when you want one
+
+Many books carry the publisher's blurb. Rather than writing one into every new
+note, Dogear leaves it to you: **Add a summary** fetches the description from
+the same metadata sources used for search and drops it into a Summary section
+near the top of the note. Once written, that section is yours — no later save
+of progress or frontmatter touches it, so you can edit or replace the summary
+freely.
+
 ### Statistics worth reading
 
 Books and pages finished, how you rated them, how long they were, and which authors you returned to, by year or across everything. Audiobooks are counted in hours rather than pages (if the correct property was included in the entry), so listening is not quietly excluded.
@@ -112,6 +121,7 @@ Every action is available from the command palette and from the panel inside eac
 | Reading statistics | Your reading, by year |
 | Add a book | Search the metadata sources |
 | Add a book manually | No network required |
+| Add a summary to this book | Pull the publisher's blurb into the note |
 | Update reading progress | Log a position |
 | Set the cover for this book | Use an image from your vault |
 | Download covers into the vault | Make covers work offline |
@@ -165,7 +175,7 @@ Issues and pull requests are welcome.
 
 ```bash
 npm install
-npm test     # 1,396 tests
+npm test     # 1,492 tests
 npm run dev  # watch build
 ```
 
